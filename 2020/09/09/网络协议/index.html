@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/bitbug_favicon_32_32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/bitbug_favicon_16_16.png">
+  <link rel="mask-icon" href="/images/logo1.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"algolia":{"appID":"UZ6NEC5CCD","apiKey":"feb2280bf3e72d135ba25f332aa2bd6d","indexName":"search","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"大兄弟，迷路了: ${query}","hits_stats":"经过漫长的${time} ms，找到了 ${hits} 条结果"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="概述分层网络有上层必有上层，比如TCP的三次握手，每次握手必有ip头和mac头部；可以有下层没上层，不能有上层没下层。网络上跑的包，有的包可以只有mac头，但是不能只有ip头没有mac头。 MTU是二层的概念，也就是MAC头和正文不允许超过1500字节，如果放不下就需要分片处理。 为什么不通过MAC地址直接定位机器？因为ip有定位功能，mac就像身份证号，ip就像门牌号，通过身份证号询问找人难度很">
+<meta property="og:type" content="article">
+<meta property="og:title" content="网络协议">
+<meta property="og:url" content="http://example.com/2020/09/09/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/index.html">
+<meta property="og:site_name" content="随笔">
+<meta property="og:description" content="概述分层网络有上层必有上层，比如TCP的三次握手，每次握手必有ip头和mac头部；可以有下层没上层，不能有上层没下层。网络上跑的包，有的包可以只有mac头，但是不能只有ip头没有mac头。 MTU是二层的概念，也就是MAC头和正文不允许超过1500字节，如果放不下就需要分片处理。 为什么不通过MAC地址直接定位机器？因为ip有定位功能，mac就像身份证号，ip就像门牌号，通过身份证号询问找人难度很">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-09-09T08:53:07.000Z">
+<meta property="article:modified_time" content="2021-02-07T07:18:40.877Z">
+<meta property="article:author" content="Ian Tang">
+<meta property="article:tag" content="Network">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2020/09/09/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>网络协议 | 随笔</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">随笔</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">岁月不居时节如流</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">24</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">0</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">58</span></a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404.html" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/09/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Ian Tang">
+      <meta itemprop="description" content="好记性不如烂笔头">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="随笔">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          网络协议
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-09 16:53:07" itemprop="dateCreated datePublished" datetime="2020-09-09T16:53:07+08:00">2020-09-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-07 15:18:40" itemprop="dateModified" datetime="2021-02-07T15:18:40+08:00">2021-02-07</time>
+              </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/09/09/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/09/09/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><h4 id="分层"><a href="#分层" class="headerlink" title="分层"></a>分层</h4><p>网络有上层必有上层，比如TCP的三次握手，每次握手必有ip头和mac头部；<strong>可以有下层没上层，不能有上层没下层。</strong>网络上跑的包，有的包可以只有mac头，但是不能只有ip头没有mac头。</p>
+<p>MTU是二层的概念，也就是MAC头和正文不允许超过1500字节，如果放不下就需要分片处理。</p>
+<h5 id="为什么不通过MAC地址直接定位机器？"><a href="#为什么不通过MAC地址直接定位机器？" class="headerlink" title="为什么不通过MAC地址直接定位机器？"></a>为什么不通过MAC地址直接定位机器？</h5><p>因为ip有定位功能，mac就像身份证号，ip就像门牌号，通过身份证号询问找人难度很大。</p>
+<h5 id="主机通讯"><a href="#主机通讯" class="headerlink" title="主机通讯"></a>主机通讯</h5><p>主机会先判断通讯的是否是同网段的，如果是同网段，发送arp请求，获得目的主机的mac地址，将本机mac地址和目的主机的mac地址填入MAC头，进行发送。</p>
+<p>如果不是同网段，主机会将包发送到网关，将目的MAC地址填入网关的MAC地址。</p>
+<h4 id="DHCP"><a href="#DHCP" class="headerlink" title="DHCP"></a>DHCP</h4><p>新加入的主机只知道自己的MAC地址，发送DHCP Discover，相当于吼一句我是新来的，MAC地址是xxxxxxxx，没有ip。</p>
+<p>DHCP Discover：使用IP为0.0.0.0的地址发送一个广播，目的ip255.255.255.255，广播包封装UDP，UDP封装BOOTP。</p>
+<h5 id="DHCP-Discover："><a href="#DHCP-Discover：" class="headerlink" title="DHCP Discover："></a>DHCP Discover：</h5><table>
+<thead>
+<tr>
+<th align="center">mac头</th>
+<th align="center">ip头</th>
+<th align="center">UDP头</th>
+<th align="center">BOOTP头</th>
+<th align="center">正文</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">src本机mac<br />dst广播FFFFFFFF</td>
+<td align="center">src0.0.0.0<br />dst广播255.255.255.255</td>
+<td align="center">srcport:68<br />dstport:67</td>
+<td align="center">boot request</td>
+<td align="center">本机mac是这个，还没有ip地址</td>
+</tr>
+</tbody></table>
+<h5 id="DHCP-Offer："><a href="#DHCP-Offer：" class="headerlink" title="DHCP Offer："></a>DHCP Offer：</h5><table>
+<thead>
+<tr>
+<th align="center">mac头</th>
+<th align="center">ip头</th>
+<th align="center">UDP头</th>
+<th align="center">BOOTP头</th>
+<th align="center">正文</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">srcDHCP服务器mac<br />dst广播FFFFFFFF</td>
+<td align="center">srcDHCP服务器IP<br />dst广播255.255.255.255</td>
+<td align="center">srcport:67<br />dstport:68</td>
+<td align="center">boot reply</td>
+<td align="center">你mac是这个，分配ip给你</td>
+</tr>
+</tbody></table>
+<h5 id="DHCP-request："><a href="#DHCP-request：" class="headerlink" title="DHCP request："></a>DHCP request：</h5><table>
+<thead>
+<tr>
+<th align="center">mac头</th>
+<th align="center">ip头</th>
+<th align="center">UDP头</th>
+<th align="center">BOOTP头</th>
+<th align="center">正文</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">src本机mac<br />dst广播FFFFFFFF</td>
+<td align="center">src0.0.0.0<br />dst广播255.255.255.255</td>
+<td align="center">srcport:68<br />dstport:67</td>
+<td align="center">boot request</td>
+<td align="center">本机mac是这个，准备租用这个DHCP分配ip</td>
+</tr>
+</tbody></table>
+<h5 id="DHCP-ACK："><a href="#DHCP-ACK：" class="headerlink" title="DHCP ACK："></a>DHCP ACK：</h5><table>
+<thead>
+<tr>
+<th align="center">mac头</th>
+<th align="center">ip头</th>
+<th align="center">UDP头</th>
+<th align="center">BOOTP头</th>
+<th align="center">正文</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">srcDHCP服务器mac<br />dst广播FFFFFFFF</td>
+<td align="center">srcDHCP服务器IP<br />dst广播255.255.255.255</td>
+<td align="center">srcport:67<br />dstport:68</td>
+<td align="center">boot reply</td>
+<td align="center">DHCP ACK这个新人ip是在我这租用的</td>
+</tr>
+</tbody></table>
+<h3 id="交换机与VLAN"><a href="#交换机与VLAN" class="headerlink" title="交换机与VLAN"></a>交换机与VLAN</h3><p>注意交换机有可能形成回路的，在实际的数据中心中，需要使用类似于STP协议等“比”出来一个根交换机以及子交换机的树状结构</p>
+<p>VLAN是打标签，对于不同vlan的报文不进行转发。在二层头后面加一个12位的tag</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Network/" rel="tag"># Network</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/09/09/PacketIn-PacketOut%E4%BB%A3%E7%A0%81%E6%80%9D%E8%B7%AF/" rel="prev" title="PacketIn/PacketOut代码思路">
+      <i class="fa fa-chevron-left"></i> PacketIn/PacketOut代码思路
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/12/25/bazel%E6%80%BB%E7%BB%93/" rel="next" title="bazel总结">
+      bazel总结 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%86%E5%B1%82"><span class="nav-number">1.1.</span> <span class="nav-text">分层</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E9%80%9A%E8%BF%87MAC%E5%9C%B0%E5%9D%80%E7%9B%B4%E6%8E%A5%E5%AE%9A%E4%BD%8D%E6%9C%BA%E5%99%A8%EF%BC%9F"><span class="nav-number">1.1.1.</span> <span class="nav-text">为什么不通过MAC地址直接定位机器？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%BB%E6%9C%BA%E9%80%9A%E8%AE%AF"><span class="nav-number">1.1.2.</span> <span class="nav-text">主机通讯</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#DHCP"><span class="nav-number">1.2.</span> <span class="nav-text">DHCP</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#DHCP-Discover%EF%BC%9A"><span class="nav-number">1.2.1.</span> <span class="nav-text">DHCP Discover：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#DHCP-Offer%EF%BC%9A"><span class="nav-number">1.2.2.</span> <span class="nav-text">DHCP Offer：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#DHCP-request%EF%BC%9A"><span class="nav-number">1.2.3.</span> <span class="nav-text">DHCP request：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#DHCP-ACK%EF%BC%9A"><span class="nav-number">1.2.4.</span> <span class="nav-text">DHCP ACK：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%A4%E6%8D%A2%E6%9C%BA%E4%B8%8EVLAN"><span class="nav-number">2.</span> <span class="nav-text">交换机与VLAN</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ian Tang"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Ian Tang</p>
+  <div class="site-description" itemprop="description">好记性不如烂笔头</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">24</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/tkhfree" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;tkhfree" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/353680783@qq.com" title="E-Mail → 353680783@qq.com"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/tkhfree" title="https:&#x2F;&#x2F;github.com&#x2F;tkhfree" rel="noopener" target="_blank">github</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ian Tang</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+  <script defer src="/lib/three/three.min.js"></script>
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'dNEm1We2BUdyVhRFRz4UNrQr-gzGzoHsz',
+      appKey     : '4LwKIXyb73dkRTtJhHVSadre',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

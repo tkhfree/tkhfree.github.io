@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/bitbug_favicon_32_32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/bitbug_favicon_16_16.png">
+  <link rel="mask-icon" href="/images/logo1.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"algolia":{"appID":"UZ6NEC5CCD","apiKey":"feb2280bf3e72d135ba25f332aa2bd6d","indexName":"search","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"大兄弟，迷路了: ${query}","hits_stats":"经过漫长的${time} ms，找到了 ${hits} 条结果"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="L2、L3在Neutron里经常看到L2、L3层，那么L2、L3是什么？ L2：是七层网络的数据链路层，通过mac地址进行传输的，网卡驱动程序。 L3：是七层网络中的网络层，通过ip地址进行传输数据，典型协议是ip协议，icmp协议等。解决的是不同网段之间的网络 通信问题，主要就是选择路由，选择到达目标主机的最优路径 数据链路层这一层和数据的包结构和字段打交道，一方面接受来自网络层的数据帧，并且暴">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Neutron的基础知识-l2层、l3层结构">
+<meta property="og:url" content="http://example.com/2020/05/26/Neutron%E7%9A%84%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86-l2%E5%B1%82%E3%80%81l3%E5%B1%82%E7%BB%93%E6%9E%84/index.html">
+<meta property="og:site_name" content="随笔">
+<meta property="og:description" content="L2、L3在Neutron里经常看到L2、L3层，那么L2、L3是什么？ L2：是七层网络的数据链路层，通过mac地址进行传输的，网卡驱动程序。 L3：是七层网络中的网络层，通过ip地址进行传输数据，典型协议是ip协议，icmp协议等。解决的是不同网段之间的网络 通信问题，主要就是选择路由，选择到达目标主机的最优路径 数据链路层这一层和数据的包结构和字段打交道，一方面接受来自网络层的数据帧，并且暴">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-05-26T02:20:58.000Z">
+<meta property="article:modified_time" content="2021-02-07T07:18:40.861Z">
+<meta property="article:author" content="Ian Tang">
+<meta property="article:tag" content="Neutron">
+<meta property="article:tag" content="OpenStack">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2020/05/26/Neutron%E7%9A%84%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86-l2%E5%B1%82%E3%80%81l3%E5%B1%82%E7%BB%93%E6%9E%84/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Neutron的基础知识-l2层、l3层结构 | 随笔</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">随笔</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">岁月不居时节如流</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">24</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">0</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">58</span></a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404.html" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/05/26/Neutron%E7%9A%84%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86-l2%E5%B1%82%E3%80%81l3%E5%B1%82%E7%BB%93%E6%9E%84/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Ian Tang">
+      <meta itemprop="description" content="好记性不如烂笔头">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="随笔">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Neutron的基础知识-l2层、l3层结构
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-05-26 10:20:58" itemprop="dateCreated datePublished" datetime="2020-05-26T10:20:58+08:00">2020-05-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-07 15:18:40" itemprop="dateModified" datetime="2021-02-07T15:18:40+08:00">2021-02-07</time>
+              </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/05/26/Neutron%E7%9A%84%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86-l2%E5%B1%82%E3%80%81l3%E5%B1%82%E7%BB%93%E6%9E%84/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/05/26/Neutron%E7%9A%84%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86-l2%E5%B1%82%E3%80%81l3%E5%B1%82%E7%BB%93%E6%9E%84/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="L2、L3"><a href="#L2、L3" class="headerlink" title="L2、L3"></a>L2、L3</h3><p>在Neutron里经常看到L2、L3层，那么L2、L3是什么？</p>
+<p>L2：是七层网络的数据链路层，通过mac地址进行传输的，网卡驱动程序。</p>
+<p>L3：是七层网络中的网络层，通过ip地址进行传输数据，典型协议是ip协议，icmp协议等。解决的是不同网段之间的网络</p>
+<p>通信问题，主要就是选择路由，选择到达目标主机的最优路径</p>
+<h3 id="数据链路层"><a href="#数据链路层" class="headerlink" title="数据链路层"></a>数据链路层</h3><p>这一层和数据的包结构和字段打交道，一方面接受来自网络层的数据帧，并且暴漏tcp Header给交换机等设备；另一方面他接受来自设备或者交换机、网桥的数据封装 tcp Header传输给网络层。</p>
+<p>数据链路层由IEEE802规划改进为包含两个子层：介质访问控制（MAC）和逻辑链路控制（LLC）。<br>智能集线器、网桥和网络接口卡（NIC）等就驻扎在这一层。但是网络接口卡它同样具有物理层的一些编码功能等。</p>
+<h3 id="网络层"><a href="#网络层" class="headerlink" title="网络层"></a>网络层</h3><p>这一层干的事就比较多了。它工作对象，概括的说就是：电路、数据包和信息交换。 </p>
+<p>网络层确定把数据包通过网络发送到目的设备，就是把逻辑网络地址转换为物理地址。如果数据包太大不能通过路径中的一条链路送到目的地，那么网络层的任务就是把这些包分成较小的包。</p>
+<p>这些任务就由路由、网桥路由、网关等设备完成。</p>
+<h3 id="其他层"><a href="#其他层" class="headerlink" title="其他层"></a>其他层</h3><h4 id="第一层，物理层"><a href="#第一层，物理层" class="headerlink" title="第一层，物理层"></a>第一层，物理层</h4><p>OSI模型最低层的“劳苦大众”。它透明地传输比特流，就是传输的信号。该层上的设备包括集线器、发送器、接收器、电缆、连接器和中继器。 </p>
+<h4 id="第四层，传输层"><a href="#第四层，传输层" class="headerlink" title="第四层，传输层"></a>第四层，传输层</h4><p>确保按顺序无错的发送数据包。传输层把来自会话层的大量消息分成易于管理的包以便向网络发送。 </p>
+<h4 id="第五层，会话层"><a href="#第五层，会话层" class="headerlink" title="第五层，会话层"></a>第五层，会话层</h4><p>在分开的计算机上的两种应用程序之间建立一种虚拟链接，这种虚拟链接称为会话（session）。会话层通过在数据流中设置检查点而保持应用程序之间的同步。允许应用程序进行通信的名称识别和安全性的工作就由会话层完成。 </p>
+<h4 id="第六层，表示层"><a href="#第六层，表示层" class="headerlink" title="第六层，表示层"></a>第六层，表示层</h4><p>定义由应用程序用来交换数据的格式。在这种意义上，表示层也称为转换器（translator）。该层负责协议转换、数据编码和数据压缩。转发程序在该层进行服务操作。 </p>
+<h4 id="第七层，应用层"><a href="#第七层，应用层" class="headerlink" title="第七层，应用层"></a>第七层，应用层</h4><p>该层是OSI模型的最高层。应用层向应用进程展示所有的网络服务。当一个应用进程访问网络时，通过该层执行所有的动作。<br>纵观七层，从低级到高级。作一个形象的比喻就是从汇编到了BASIC，越到高层与硬件的关联就越弱。</p>
+<h3 id="物理介质：各个层在物理层面的载体"><a href="#物理介质：各个层在物理层面的载体" class="headerlink" title="物理介质：各个层在物理层面的载体"></a>物理介质：各个层在物理层面的载体</h3><p>物理层—-就是我们看得见的网卡。网卡的作用就是把线路发送过来的高频电流转化数据包，然后传给网卡驱动程序，同是也把网卡驱动程序传送过来的数据包转化成电信号传送出去。定义通过网络设备发送数据的物理方式：是网络媒介和设备间的接口。 </p>
+<p>数据链路层—-是网卡驱动程序。定义控制通信连接的程序；封包；监测和改正包传输错误。 </p>
+<p>网络层—-即NDIS，NDIS提供网络接口。决定网络设备间如何传输数据；根据唯一的网络设备地址选择包；提供流和拥塞控制，以阻止同时网络资源的损耗。 </p>
+<p>传输层—-即TCP，TCP协议的封包处理是在这一层进行的。管理网络中首尾连接的信息传送；提供通过错误恢复和流控制装置传送可靠且有序的包；提供无连接面向包的传送。 </p>
+<p>会话层—-即SPI，SPI是服务提供者接口，管理用户间的会话和对话；控制用户间的连接和挂断连接；报告上层错误。 </p>
+<p>表示层—-API，它为应用程序提供接口。API负责SPI与应用程序之间的通信；定义不同体系间不同数据格式；具体说明独立结构的数据传输格式；编码和解码数据；加密和解密数据；压缩和解压缩数据。 </p>
+<p>应用层—-EXE，就是大家常见的应用程序。定义用于网络通信和数据传输的用户接口程序；提供标准服务，比如虚拟终端、文档以及任务的传输和操作。 </p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Neutron/" rel="tag"># Neutron</a>
+              <a href="/tags/OpenStack/" rel="tag"># OpenStack</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/05/25/thrift%E4%BA%86%E8%A7%A3/" rel="prev" title="thrift了解与AMQP">
+      <i class="fa fa-chevron-left"></i> thrift了解与AMQP
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/05/26/Neutron%E7%9A%84%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86-%E4%BA%A4%E6%8D%A2%E6%9C%BA%E3%80%81%E8%B7%AF%E7%94%B1%E5%99%A8%E3%80%81DHCP/" rel="next" title="Neutron的基础知识-交换机、路由器、DHCP">
+      Neutron的基础知识-交换机、路由器、DHCP <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#L2%E3%80%81L3"><span class="nav-number">1.</span> <span class="nav-text">L2、L3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82"><span class="nav-number">2.</span> <span class="nav-text">数据链路层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E5%B1%82"><span class="nav-number">3.</span> <span class="nav-text">网络层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E5%B1%82"><span class="nav-number">4.</span> <span class="nav-text">其他层</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E5%B1%82%EF%BC%8C%E7%89%A9%E7%90%86%E5%B1%82"><span class="nav-number">4.1.</span> <span class="nav-text">第一层，物理层</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E5%B1%82%EF%BC%8C%E4%BC%A0%E8%BE%93%E5%B1%82"><span class="nav-number">4.2.</span> <span class="nav-text">第四层，传输层</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E4%BA%94%E5%B1%82%EF%BC%8C%E4%BC%9A%E8%AF%9D%E5%B1%82"><span class="nav-number">4.3.</span> <span class="nav-text">第五层，会话层</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E5%85%AD%E5%B1%82%EF%BC%8C%E8%A1%A8%E7%A4%BA%E5%B1%82"><span class="nav-number">4.4.</span> <span class="nav-text">第六层，表示层</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E4%B8%83%E5%B1%82%EF%BC%8C%E5%BA%94%E7%94%A8%E5%B1%82"><span class="nav-number">4.5.</span> <span class="nav-text">第七层，应用层</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%89%A9%E7%90%86%E4%BB%8B%E8%B4%A8%EF%BC%9A%E5%90%84%E4%B8%AA%E5%B1%82%E5%9C%A8%E7%89%A9%E7%90%86%E5%B1%82%E9%9D%A2%E7%9A%84%E8%BD%BD%E4%BD%93"><span class="nav-number">5.</span> <span class="nav-text">物理介质：各个层在物理层面的载体</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ian Tang"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Ian Tang</p>
+  <div class="site-description" itemprop="description">好记性不如烂笔头</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">24</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/tkhfree" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;tkhfree" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/353680783@qq.com" title="E-Mail → 353680783@qq.com"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/tkhfree" title="https:&#x2F;&#x2F;github.com&#x2F;tkhfree" rel="noopener" target="_blank">github</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ian Tang</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+  <script defer src="/lib/three/three.min.js"></script>
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'dNEm1We2BUdyVhRFRz4UNrQr-gzGzoHsz',
+      appKey     : '4LwKIXyb73dkRTtJhHVSadre',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

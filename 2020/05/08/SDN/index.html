@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/bitbug_favicon_32_32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/bitbug_favicon_16_16.png">
+  <link rel="mask-icon" href="/images/logo1.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"algolia":{"appID":"UZ6NEC5CCD","apiKey":"feb2280bf3e72d135ba25f332aa2bd6d","indexName":"search","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"大兄弟，迷路了: ${query}","hits_stats":"经过漫长的${time} ms，找到了 ${hits} 条结果"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="传统网络就像真人在踢足球，每个人自己思考下一步把球传到哪儿，然后自己用头或者脚传出去。SDN就像你在打实况足球，球员怎么传球都是集中由你来控制。这就叫控制面和转发面的分离，并且控制面集中起来。集中后的控制面叫做控制器，类似游戏手柄。控制器之上就是软件，来 操作控制器具体怎么处理。就像你聪明的大脑来控制游戏手柄。open flow就是控制器与网络设备沟通时的语言。 作者：陈博链接：https:&#x2F;&#x2F;w">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SDN定义概念">
+<meta property="og:url" content="http://example.com/2020/05/08/SDN/index.html">
+<meta property="og:site_name" content="随笔">
+<meta property="og:description" content="传统网络就像真人在踢足球，每个人自己思考下一步把球传到哪儿，然后自己用头或者脚传出去。SDN就像你在打实况足球，球员怎么传球都是集中由你来控制。这就叫控制面和转发面的分离，并且控制面集中起来。集中后的控制面叫做控制器，类似游戏手柄。控制器之上就是软件，来 操作控制器具体怎么处理。就像你聪明的大脑来控制游戏手柄。open flow就是控制器与网络设备沟通时的语言。 作者：陈博链接：https:&#x2F;&#x2F;w">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-05-08T03:33:37.000Z">
+<meta property="article:modified_time" content="2021-02-07T07:18:40.865Z">
+<meta property="article:author" content="Ian Tang">
+<meta property="article:tag" content="OpenStack">
+<meta property="article:tag" content="SDN">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2020/05/08/SDN/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>SDN定义概念 | 随笔</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">随笔</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">岁月不居时节如流</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">24</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">0</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">58</span></a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404.html" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/05/08/SDN/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Ian Tang">
+      <meta itemprop="description" content="好记性不如烂笔头">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="随笔">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SDN定义概念
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-05-08 11:33:37" itemprop="dateCreated datePublished" datetime="2020-05-08T11:33:37+08:00">2020-05-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-07 15:18:40" itemprop="dateModified" datetime="2021-02-07T15:18:40+08:00">2021-02-07</time>
+              </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/05/08/SDN/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/05/08/SDN/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>传统网络就像真人在踢足球，每个人自己思考下一步把球传到哪儿，然后自己用头或者脚传出去。SDN就像你在打实况足球，球员怎么传球都是集中由你来控制。这就叫控制面和转发面的分离，并且控制面集中起来。集中后的控制面叫做控制器，类似游戏手柄。控制器之上就是软件，来 操作控制器具体怎么处理。就像你聪明的大脑来控制游戏手柄。open flow就是控制器与网络设备沟通时的语言。</p>
+<p>作者：陈博<br>链接：<a target="_blank" rel="noopener" href="https://www.zhihu.com/question/20279620/answer/23434541">https://www.zhihu.com/question/20279620/answer/23434541</a><br>来源：知乎<br>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</p>
+<hr>
+<p><strong>SDN</strong>是一种思想，不是任何协议或者技术，是一种把专用电信硬件采用x86通用硬件替代的思想，专用电信硬件所支持的各种协议，通过sdn思想，软件编程化，即软件定义网络（soft defined network）。</p>
+<p>只要网络硬件可以集中软件式管理、可编程、转发和控制分开，则认为这个网络是一个sdn网络。</p>
+<p>作者：int32bit<br>链接：<a target="_blank" rel="noopener" href="https://www.zhihu.com/question/37126320/answer/382480862">https://www.zhihu.com/question/37126320/answer/382480862</a><br>来源：知乎<br>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</p>
+<p>首先从大的角度谈区别，OpenStack是一个IaaS开源实现方案之一，提供计算、存储、网络等基础服务以及诸如数据库服务、大数据服务、容器编排服务等高级服务，而SDN主要聚集在网络这一块。因此从技术生态覆盖面角度看，OpenStack的生态方方面面十分庞大，网络只是其中的一个点，由组件Neutron负责实现。而SDN的生态只有网络这一点。</p>
+<p>同样是网络，<strong>OpenStack Neutron注重的是为虚拟机、容器、物理服务器等提供网络服务</strong>，提供的是面向用户的北向RESTFul API，而<strong>SDN注重的是解决网络设备的配置以及转发控制问题</strong>，更侧重于底层网络设备的配置管理以及控制，既要提供面向用户的北向API，还要提供南向API，对接各种硬件设备的协议。</p>
+<p>更细化的角度看联系，SDN的思想是控制转发分离，这是一种网络设计理念和变革。具体什么是控制转发分离，google有很专业的描述。我的简单理解就是把以前需要手动ssh或者通过console一台一台配置交换机、路由器、防火墙、负载均衡等硬件的活，现在通过一个中心控制器统一纳管起来，对用户屏蔽了底层硬件区别，网络管理员只需要调用标准API或者Web界面操作控制器就能自动下发配置策略到指定的设备中。当然除了配置问题，有些功能也从网络设备中剥离出来，放到控制器实现，不再揉到一块，这些功能包括链路发现、mac地址学习、路由计算等。硬件只负责转发或者路由即可。控制器如何与硬件打交道呢？当然是通过协议了，如openflow、netconf等。这里我们只关注SDN中的控制器，显然这是一个调度与控制中心，向上对用户负责，为用户提供API，向下对接各种网络设备，下发策略。</p>
+<p>我们再来看OpenStack Neutron，我们知道，OpenStack Neutron由neutron-server和一堆agents/drivers组成。这个neutron-server的功能和SDN中的控制器非常类似，向上对用户负责，为用户提供可编程API，向下对接各种agents，只是对接的协议不同，neutron-server与agent的交互的南向协议是RPC。所以我们可以简单理解neutron-server其实就是SDN控制器实现之一（不一定准确），负责向各种agents下发策略，agents再向各种网络设备转发策略。问题是除了虚拟网络设备（如OVS），还有各种各样的硬件网络设备，这些网络设备的功能、配置标准以及协议等均存在很大的差别，如果OpenStack Neutron要全部纳管起来，需要写一堆的agents和drivers，而且是重复造轮子，功能上也没有解耦，Neutron会非常重。最好的方式是不要直接去对接硬件，直接对接现成的SDN控制器即可，因为SDN控制器提供的北向API通常是标准的，而又屏蔽了底层硬件设备的差异化，不再需要实现各种各种的agents和drivers了，只需要实现对接SDN控制器的agent或者driver即可，比如对接开源的SDN控制器ODL(<a href="https://link.zhihu.com/?target=https://github.com/openstack/networking-odl">openstack/networking-odl</a>)以及华为AC控制器等等。</p>
+<p>简而言之，SDN是一种思想，核心理念是控制与转发分离，控制由控制器实现，转发由网络设备实现，其中ODL是控制器的开源实现之一。OpenStack Neutron是为OpenStack提供网络服务的组件，neutron-server服务可以当作是SDN控制器的实现之一，Neutorn可以串接其它的SDN控制器，比如ODL。</p>
+<p>另外，如果想从事SDN或者OpenStack开发，并不是一定要两者都懂，看你负责什么工作了。OpenStack的大多数开发都不需要直接接触SDN，比如你负责存储服务Cinder或者计算服务Nova，基本就不会直接与SDN打交道。同样的，从事SDN也不一定非要和OpenStack扯上关系，二者可以说是完全解耦独立的。当然，如果你负责OpenStack Neutron开发，并且需要对接SDN，则对二者的熟悉是必须的了。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/OpenStack/" rel="tag"># OpenStack</a>
+              <a href="/tags/SDN/" rel="tag"># SDN</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/05/07/WSGI%E7%BD%91%E5%85%B3%E5%8D%8F%E8%AE%AE%E7%90%86%E8%A7%A3/" rel="prev" title="WSGI网关协议理解">
+      <i class="fa fa-chevron-left"></i> WSGI网关协议理解
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/05/09/Neutron%E4%BA%86%E8%A7%A3/" rel="next" title="Neutron了解一">
+      Neutron了解一 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ian Tang"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Ian Tang</p>
+  <div class="site-description" itemprop="description">好记性不如烂笔头</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">24</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/tkhfree" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;tkhfree" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/353680783@qq.com" title="E-Mail → 353680783@qq.com"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/tkhfree" title="https:&#x2F;&#x2F;github.com&#x2F;tkhfree" rel="noopener" target="_blank">github</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ian Tang</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+  <script defer src="/lib/three/three.min.js"></script>
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'dNEm1We2BUdyVhRFRz4UNrQr-gzGzoHsz',
+      appKey     : '4LwKIXyb73dkRTtJhHVSadre',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

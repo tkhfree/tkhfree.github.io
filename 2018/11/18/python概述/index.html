@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/bitbug_favicon_32_32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/bitbug_favicon_16_16.png">
+  <link rel="mask-icon" href="/images/logo1.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"algolia":{"appID":"UZ6NEC5CCD","apiKey":"feb2280bf3e72d135ba25f332aa2bd6d","indexName":"search","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"大兄弟，迷路了: ${query}","hits_stats":"经过漫长的${time} ms，找到了 ${hits} 条结果"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="python是一个解释型，交互式，无编译的面向对象语言 python缺点：  运行慢，因为python是一个交互式面向对象语言，执行python语句时，每执行一句就要编译一句。c语言是编译好cpu可以执行的文件之后再运行。但是由于网络的延迟，这一缺点影响很小 加密性。解释型语言只能发布源码，而编译型语言可以发布编译后的文件（xxx.exe）。   python中字符串用单引号’和双引号”都可以，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="python概述">
+<meta property="og:url" content="http://example.com/2018/11/18/python%E6%A6%82%E8%BF%B0/index.html">
+<meta property="og:site_name" content="随笔">
+<meta property="og:description" content="python是一个解释型，交互式，无编译的面向对象语言 python缺点：  运行慢，因为python是一个交互式面向对象语言，执行python语句时，每执行一句就要编译一句。c语言是编译好cpu可以执行的文件之后再运行。但是由于网络的延迟，这一缺点影响很小 加密性。解释型语言只能发布源码，而编译型语言可以发布编译后的文件（xxx.exe）。   python中字符串用单引号’和双引号”都可以，">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-11-17T16:21:52.000Z">
+<meta property="article:modified_time" content="2021-02-07T07:18:40.870Z">
+<meta property="article:author" content="Ian Tang">
+<meta property="article:tag" content="Python">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2018/11/18/python%E6%A6%82%E8%BF%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>python概述 | 随笔</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">随笔</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">岁月不居时节如流</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">24</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">0</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">58</span></a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404.html" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2018/11/18/python%E6%A6%82%E8%BF%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Ian Tang">
+      <meta itemprop="description" content="好记性不如烂笔头">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="随笔">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          python概述
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-11-18 00:21:52" itemprop="dateCreated datePublished" datetime="2018-11-18T00:21:52+08:00">2018-11-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-07 15:18:40" itemprop="dateModified" datetime="2021-02-07T15:18:40+08:00">2021-02-07</time>
+              </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2018/11/18/python%E6%A6%82%E8%BF%B0/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2018/11/18/python%E6%A6%82%E8%BF%B0/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <ul>
+<li><p>python是一个解释型，交互式，无编译的面向对象语言 python缺点：</p>
+<ol>
+<li>运行慢，因为python是一个交互式面向对象语言，执行python语句时，每执行一句就要编译一句。c语言是编译好cpu可以执行的文件之后再运行。但是由于网络的延迟，这一缺点影响很小</li>
+<li>加密性。解释型语言只能发布源码，而编译型语言可以发布编译后的文件（xxx.exe）。</li>
+</ol>
+</li>
+<li><p>python中字符串用单引号’和双引号”都可以，但不可以混用</p>
+</li>
+</ul>
+<ul>
+<li><p>python是一个动态语言，变量本身类型不固定</p>
+</li>
+<li><p>str是不变对象，而list是可变对象。对于可变对象，比如list，对list进行操作，list内部的内容是会变化的。元组(tuple)、数值型（number)、字符串(string)均为不可变对象,而字典型(dictionary)和列表型(list)的对象是可变对象</p>
+</li>
+</ul>
+<p>###list&amp;tuple<br>list是一个可变数组，tuple是一个不可变数组。（指向永不变），tuple(“a”,”b”,[“x”,”y”])，x，y可变，a，b不可变。</p>
+<h3 id="dict-amp-set"><a href="#dict-amp-set" class="headerlink" title="dict&amp;set"></a>dict&amp;set</h3><p>python字典是dict函数，其他语言也有称为map，使用键-值（key-value）存储。set跟dict类似，是一组不能改变的key集合，要创建一个set，需要提供一个list作为输入集合</p>
+<h3 id="range"><a href="#range" class="headerlink" title="range"></a>range</h3><p>python range()函数生成整数序列，list函数生成list，例如list(range(5))<br>###函数</p>
+<ul>
+<li><p>定义函数时，需要确定函数名和参数个数；</p>
+</li>
+<li><p>如果有必要，可以先对参数的数据类型做检查；</p>
+</li>
+</ul>
+<ul>
+<li>函数体内部可以用return随时返回函数结果；</li>
+</ul>
+<ul>
+<li><p>函数执行完毕也没有return语句时，自动return None。</p>
+</li>
+<li><p>函数可以同时返回多个值，但其实就是一个tuple。</p>
+</li>
+<li><p>函数可以传递默认参数，放在可变参数后面，默认参数必须指向不变对象，不然每次调用一次默认参数的函数就会在指向对象上发生改变</p>
+</li>
+<li><p>函数可以定义可变参数，定义可变参数传入需是list或者tuple。或者定义函数时可变参数加上<em>。这样调用时可以输入任意数量参数，或者加上</em>的list/tuple</p>
+</li>
+<li><p>关键字参数。可变参数允许你传入0个或任意个参数，这些可变参数在函数调用时自动组装为一个tuple。而关键字参数允许你传入0个或任意个含参数名的参数，这些关键字参数在函数内部自动组装为一个dict。</p>
+<p> def person(name, age, **kw):</p>
+<pre><code> print(&#39;name:&#39;, name, &#39;age:&#39;, age, &#39;other:&#39;, kw)
+</code></pre>
+<p>函数person除了必选参数name和age外，还接受关键字参数kw。在调用该函数时，可以只传入必选参数或者包含任意个数的关键字参数：</p>
+<p>  person(‘Bob’, 35, city=’Beijing’)<br> name: Bob age: 35 other: {‘city’: ‘Beijing’}</p>
+</li>
+<li><p>返回函数中内部函数可以调用外部函数的参数和局部变量，当调用外层函数输出内部函数的时候，这个参数和局部变量都保存起来了，返回的函数其实并没有被调用，只有调用返回赋值的变量的时候才被调用</p>
+</li>
+</ul>
+<p>在Python中定义函数，可以用必选参数、默认参数、可变参数、关键字参数和命名关键字参数，这5种参数都可以组合使用。但是请注意，参数定义的顺序必须是：必选参数、默认参数、可变参数、命名关键字参数和关键字参数。</p>
+<pre><code>def f1(a, b, c=0, *args, **kw):
+    print(&#39;a =&#39;, a, &#39;b =&#39;, b, &#39;c =&#39;, c, &#39;args =&#39;, args, &#39;kw =&#39;, kw)
+
+def f2(a, b, c=0, *, d, **kw):
+    print(&#39;a =&#39;, a, &#39;b =&#39;, b, &#39;c =&#39;, c, &#39;d =&#39;, d, &#39;kw =&#39;, kw)
+</code></pre>
+<p>###装饰器<br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/cicaday/p/python-decorator.html">详解Python的装饰器</a><br>在代码运行期间动态增加功能的方式，称之为“装饰器”（Decorator），本质上，decorator就是一个返回函数的高阶函数</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Python/" rel="tag"># Python</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/11/18/server/" rel="prev" title="python WSGI框架">
+      <i class="fa fa-chevron-left"></i> python WSGI框架
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/11/18/python%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%93%8D%E4%BD%9C/" rel="next" title="python与mysql连接的框架sqlalchemy">
+      python与mysql连接的框架sqlalchemy <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#dict-amp-set"><span class="nav-number">1.</span> <span class="nav-text">dict&amp;set</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#range"><span class="nav-number">2.</span> <span class="nav-text">range</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ian Tang"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Ian Tang</p>
+  <div class="site-description" itemprop="description">好记性不如烂笔头</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">24</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/tkhfree" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;tkhfree" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/353680783@qq.com" title="E-Mail → 353680783@qq.com"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/tkhfree" title="https:&#x2F;&#x2F;github.com&#x2F;tkhfree" rel="noopener" target="_blank">github</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ian Tang</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+  <script defer src="/lib/three/three.min.js"></script>
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'dNEm1We2BUdyVhRFRz4UNrQr-gzGzoHsz',
+      appKey     : '4LwKIXyb73dkRTtJhHVSadre',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
