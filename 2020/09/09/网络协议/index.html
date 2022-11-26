@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Ian Tang">
+
+
+    <meta name="subtitle" content="岁月不居时节如流">
+
+
+    <meta name="description" content="好记性不如烂笔头">
+
+
+
+<title>网络协议 | 随笔</title>
+
+
+
+    <link rel="icon" href="/image/The_Lion_King_32_32.png">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Tangkaifei&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Tangkaifei&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    var tocbot_timer;
+    var DEPTH_MAX = 6; // 为 6 时展开所有
+    var tocbot_default_config = {
+        tocSelector: '.tocbot-list',
+        contentSelector: '.post-content',
+        headingSelector: 'h1, h2, h3, h4, h5',
+        orderedList: false,
+        scrollSmooth: true,
+        onClick: extend_click,
+    };
+
+    function extend_click() {
+        clearTimeout(tocbot_timer);
+        tocbot_timer = setTimeout(function() {
+            tocbot.refresh(obj_merge(tocbot_default_config, {
+                hasInnerContainers: true
+            }));
+        }, 420); // 这个值是由 tocbot 源码里定义的 scrollSmoothDuration 得来的
+    }
+
+    document.ready(function() {
+        tocbot.init(obj_merge(tocbot_default_config, {
+            collapseDepth: 1
+        }));
+    });
+
+    function expand_toc() {
+        var b = document.querySelector('.tocbot-toc-expand');
+        var expanded = b.getAttribute('data-expanded');
+        expanded ? b.removeAttribute('data-expanded') : b.setAttribute('data-expanded', true);
+        tocbot.refresh(obj_merge(tocbot_default_config, {
+            collapseDepth: expanded ? 1 : DEPTH_MAX
+        }));
+        b.innerText = expanded ? 'Expand all' : 'Collapse all';
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function obj_merge(target, source) {
+        for (var item in source) {
+            if (source.hasOwnProperty(item)) {
+                target[item] = source[item];
+            }
+        }
+        return target;
+    }
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">网络协议</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">Ian Tang</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">九月 9, 2020&nbsp;&nbsp;16:53:07</a>
+                        </span>
+                    
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><h4 id="分层"><a href="#分层" class="headerlink" title="分层"></a>分层</h4><p>网络有上层必有上层，比如TCP的三次握手，每次握手必有ip头和mac头部；<strong>可以有下层没上层，不能有上层没下层。</strong>网络上跑的包，有的包可以只有mac头，但是不能只有ip头没有mac头。</p>
+<p>MTU是二层的概念，也就是MAC头和正文不允许超过1500字节，如果放不下就需要分片处理。</p>
+<h5 id="为什么不通过MAC地址直接定位机器？"><a href="#为什么不通过MAC地址直接定位机器？" class="headerlink" title="为什么不通过MAC地址直接定位机器？"></a>为什么不通过MAC地址直接定位机器？</h5><p>因为ip有定位功能，mac就像身份证号，ip就像门牌号，通过身份证号询问找人难度很大。</p>
+<h5 id="主机通讯"><a href="#主机通讯" class="headerlink" title="主机通讯"></a>主机通讯</h5><p>主机会先判断通讯的是否是同网段的，如果是同网段，发送arp请求，获得目的主机的mac地址，将本机mac地址和目的主机的mac地址填入MAC头，进行发送。</p>
+<p>如果不是同网段，主机会将包发送到网关，将目的MAC地址填入网关的MAC地址。</p>
+<h4 id="DHCP"><a href="#DHCP" class="headerlink" title="DHCP"></a>DHCP</h4><p>新加入的主机只知道自己的MAC地址，发送DHCP Discover，相当于吼一句我是新来的，MAC地址是xxxxxxxx，没有ip。</p>
+<p>DHCP Discover：使用IP为0.0.0.0的地址发送一个广播，目的ip255.255.255.255，广播包封装UDP，UDP封装BOOTP。</p>
+<h5 id="DHCP-Discover："><a href="#DHCP-Discover：" class="headerlink" title="DHCP Discover："></a>DHCP Discover：</h5><table>
+<thead>
+<tr>
+<th align="center">mac头</th>
+<th align="center">ip头</th>
+<th align="center">UDP头</th>
+<th align="center">BOOTP头</th>
+<th align="center">正文</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">src本机mac<br />dst广播FFFFFFFF</td>
+<td align="center">src0.0.0.0<br />dst广播255.255.255.255</td>
+<td align="center">srcport:68<br />dstport:67</td>
+<td align="center">boot request</td>
+<td align="center">本机mac是这个，还没有ip地址</td>
+</tr>
+</tbody></table>
+<h5 id="DHCP-Offer："><a href="#DHCP-Offer：" class="headerlink" title="DHCP Offer："></a>DHCP Offer：</h5><table>
+<thead>
+<tr>
+<th align="center">mac头</th>
+<th align="center">ip头</th>
+<th align="center">UDP头</th>
+<th align="center">BOOTP头</th>
+<th align="center">正文</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">srcDHCP服务器mac<br />dst广播FFFFFFFF</td>
+<td align="center">srcDHCP服务器IP<br />dst广播255.255.255.255</td>
+<td align="center">srcport:67<br />dstport:68</td>
+<td align="center">boot reply</td>
+<td align="center">你mac是这个，分配ip给你</td>
+</tr>
+</tbody></table>
+<h5 id="DHCP-request："><a href="#DHCP-request：" class="headerlink" title="DHCP request："></a>DHCP request：</h5><table>
+<thead>
+<tr>
+<th align="center">mac头</th>
+<th align="center">ip头</th>
+<th align="center">UDP头</th>
+<th align="center">BOOTP头</th>
+<th align="center">正文</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">src本机mac<br />dst广播FFFFFFFF</td>
+<td align="center">src0.0.0.0<br />dst广播255.255.255.255</td>
+<td align="center">srcport:68<br />dstport:67</td>
+<td align="center">boot request</td>
+<td align="center">本机mac是这个，准备租用这个DHCP分配ip</td>
+</tr>
+</tbody></table>
+<h5 id="DHCP-ACK："><a href="#DHCP-ACK：" class="headerlink" title="DHCP ACK："></a>DHCP ACK：</h5><table>
+<thead>
+<tr>
+<th align="center">mac头</th>
+<th align="center">ip头</th>
+<th align="center">UDP头</th>
+<th align="center">BOOTP头</th>
+<th align="center">正文</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">srcDHCP服务器mac<br />dst广播FFFFFFFF</td>
+<td align="center">srcDHCP服务器IP<br />dst广播255.255.255.255</td>
+<td align="center">srcport:67<br />dstport:68</td>
+<td align="center">boot reply</td>
+<td align="center">DHCP ACK这个新人ip是在我这租用的</td>
+</tr>
+</tbody></table>
+<h3 id="交换机与VLAN"><a href="#交换机与VLAN" class="headerlink" title="交换机与VLAN"></a>交换机与VLAN</h3><p>注意交换机有可能形成回路的，在实际的数据中心中，需要使用类似于STP协议等“比”出来一个根交换机以及子交换机的树状结构</p>
+<p>VLAN是打标签，对于不同vlan的报文不进行转发。在二层头后面加一个12位的tag</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>Ian Tang</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://tkhfree.github.io/2020/09/09/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/">https://tkhfree.github.io/2020/09/09/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Network/"># Network</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2020/12/25/bazel%E6%80%BB%E7%BB%93/">bazel总结</a>
+            
+            
+            <a class="next" rel="next" href="/2020/09/09/PacketIn-PacketOut%E4%BB%A3%E7%A0%81%E6%80%9D%E8%B7%AF/">PacketIn/PacketOut代码思路</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Ian Tang | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>

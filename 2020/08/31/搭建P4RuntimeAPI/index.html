@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Ian Tang">
+
+
+    <meta name="subtitle" content="岁月不居时节如流">
+
+
+    <meta name="description" content="好记性不如烂笔头">
+
+
+
+<title>搭建P4RuntimeAPI | 随笔</title>
+
+
+
+    <link rel="icon" href="/image/The_Lion_King_32_32.png">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Tangkaifei&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Tangkaifei&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    var tocbot_timer;
+    var DEPTH_MAX = 6; // 为 6 时展开所有
+    var tocbot_default_config = {
+        tocSelector: '.tocbot-list',
+        contentSelector: '.post-content',
+        headingSelector: 'h1, h2, h3, h4, h5',
+        orderedList: false,
+        scrollSmooth: true,
+        onClick: extend_click,
+    };
+
+    function extend_click() {
+        clearTimeout(tocbot_timer);
+        tocbot_timer = setTimeout(function() {
+            tocbot.refresh(obj_merge(tocbot_default_config, {
+                hasInnerContainers: true
+            }));
+        }, 420); // 这个值是由 tocbot 源码里定义的 scrollSmoothDuration 得来的
+    }
+
+    document.ready(function() {
+        tocbot.init(obj_merge(tocbot_default_config, {
+            collapseDepth: 1
+        }));
+    });
+
+    function expand_toc() {
+        var b = document.querySelector('.tocbot-toc-expand');
+        var expanded = b.getAttribute('data-expanded');
+        expanded ? b.removeAttribute('data-expanded') : b.setAttribute('data-expanded', true);
+        tocbot.refresh(obj_merge(tocbot_default_config, {
+            collapseDepth: expanded ? 1 : DEPTH_MAX
+        }));
+        b.innerText = expanded ? 'Expand all' : 'Collapse all';
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function obj_merge(target, source) {
+        for (var item in source) {
+            if (source.hasOwnProperty(item)) {
+                target[item] = source[item];
+            }
+        }
+        return target;
+    }
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">搭建P4RuntimeAPI</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">Ian Tang</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">八月 31, 2020&nbsp;&nbsp;19:34:08</a>
+                        </span>
+                    
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p><img src="https://pic.downk.cc/item/5fa4f4081cd1bbb86b9e29b9.jpg"></p>
+<h1 id="依赖安装-dependency"><a href="#依赖安装-dependency" class="headerlink" title="依赖安装:dependency"></a>依赖安装:dependency</h1><h3 id="grpcpp"><a href="#grpcpp" class="headerlink" title="grpcpp"></a>grpcpp</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cd</span><br><span class="line">[sudo] apt-get install build-essential autoconf libtool pkg-config</span><br><span class="line">[sudo] apt-get install cmake</span><br></pre></td></tr></table></figure>
+
+<h5 id="Clone-the-repository-including-submodules"><a href="#Clone-the-repository-including-submodules" class="headerlink" title="Clone the repository (including submodules)"></a>Clone the repository (including submodules)</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git clone -b v1.31.1 https://github.com/grpc/grpc</span><br><span class="line">cd grpc</span><br><span class="line">git submodule update --init</span><br></pre></td></tr></table></figure>
+
+<h3 id="PI"><a href="#PI" class="headerlink" title="PI"></a>PI</h3><p>An implementation framework for a P4Runtime server</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cd</span><br><span class="line">sudo apt install  libboost-thread-dev libjudy-dev</span><br><span class="line">git clone https://github.com/p4lang/PI.git</span><br><span class="line">git submodule update --init --recursive</span><br></pre></td></tr></table></figure>
+
+<p>安装Bmv2及P4编译器（非必须，主要要安装p4编译器p4c）</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">cd ~/PI</span><br><span class="line">git clone https://github.com/p4lang/behavioral-model.git</span><br><span class="line">cd behavioral-model</span><br><span class="line">./install_deps.sh</span><br><span class="line">./autogen.sh</span><br><span class="line">./configure</span><br><span class="line">make</span><br><span class="line">sudo make install</span><br></pre></td></tr></table></figure>
+
+<p>安装Protobuf</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/google/protobuf.git</span><br><span class="line">cd protobuf/</span><br><span class="line">git checkout tags/v3.6.1</span><br><span class="line">./autogen.sh</span><br><span class="line">./configure</span><br><span class="line">注意：此处如果有一个警告，没有googletest的配置信息的话，需要删除third_part/googletest,从https://github.com/google/googletest/releases下载源文件，解压，重新执行第四步</span><br><span class="line">make</span><br><span class="line">[sudo] make install</span><br><span class="line">[sudo] ldconfig</span><br></pre></td></tr></table></figure>
+
+<p>安装gRPC</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/google/grpc.git</span><br><span class="line">cd grpc/</span><br><span class="line">git checkout tags/v1.17.2</span><br><span class="line">git submodule update --init --recursive</span><br><span class="line">make</span><br><span class="line">[sudo] make install</span><br><span class="line">[sudo] ldconfig</span><br></pre></td></tr></table></figure>
+
+<p>注意：这里grpc&#x2F;third_party&#x2F;bloaty里面有一个libfuzze的子模块下不下来，更改.gitmodules的地址会造成git tree检测分支报错，我这里直接就在github上下载下来放到grpc&#x2F;third_party&#x2F;bloaty&#x2F;third_party里，进行下一步make了。</p>
+<p>安装sysrepo（非必须）</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">sudo apt installbuild-essential cmake libpcre3-dev libavl-dev libev-dev libprotobuf-c-dev protobuf-c-compiler</span><br><span class="line">cd ~/PI</span><br><span class="line">git clone https://github.com/CESNET/libyang.git</span><br><span class="line">cd libyang</span><br><span class="line">git checkout v0.16-r1</span><br><span class="line">mkdir build</span><br><span class="line">cd build</span><br><span class="line">cmake ..</span><br><span class="line">make</span><br><span class="line">[sudo] make install</span><br><span class="line">cd ~/PI</span><br><span class="line">git clone https://github.com/sysrepo/sysrepo.git</span><br><span class="line">cd sysrepo</span><br><span class="line">git checkout v0.7.5</span><br><span class="line">mkdir build</span><br><span class="line">cd build</span><br><span class="line">cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=Off -DCALL_TARGET_BINS_DIRECTLY=Off ..</span><br><span class="line">make</span><br><span class="line">[sudo] make install</span><br></pre></td></tr></table></figure>
+
+<h5 id="Building-p4runtime-proto"><a href="#Building-p4runtime-proto" class="headerlink" title="Building p4runtime.proto"></a>Building p4runtime.proto</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">./autogen.sh</span><br><span class="line">./configure --with-proto</span><br><span class="line">make</span><br><span class="line">make check</span><br><span class="line">[sudo] make install</span><br></pre></td></tr></table></figure>
+
+<p>如果在make报错，在这里一直报一个protoc版本的错误，则修改~&#x2F;PI&#x2F;proto&#x2F;cpp_out&#x2F;p4&#x2F;config&#x2F;v1第17行，删掉。如果不行，重新装一遍成功。</p>
+<h3 id="t4p4s"><a href="#t4p4s" class="headerlink" title="t4p4s"></a>t4p4s</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/P4ELTE/t4p4s</span><br><span class="line">把t4p4s_mod文件夹里的内容拷贝至t4p4s内</span><br></pre></td></tr></table></figure>
+
+<h1 id="生成桩模块"><a href="#生成桩模块" class="headerlink" title="生成桩模块"></a>生成桩模块</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./install.sh</span><br></pre></td></tr></table></figure>
+
+<h1 id="编译源文件以及起pi-server"><a href="#编译源文件以及起pi-server" class="headerlink" title="编译源文件以及起pi_server"></a>编译源文件以及起pi_server</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./compile.sh -D</span><br><span class="line">sudo ./pi_server</span><br></pre></td></tr></table></figure>
+
+<h1 id="连接至ONOS"><a href="#连接至ONOS" class="headerlink" title="连接至ONOS"></a>连接至ONOS</h1><ol>
+<li>将P4Runtime_GRPCPP&#x2F;onos目录下的t4p4s文件复制到 ~&#x2F;onos&#x2F;apps下</li>
+<li>vim ~&#x2F;onos&#x2F;tools&#x2F;build&#x2F;bazel&#x2F;modules.bzl<br>在&#x2F;&#x2F;apps&#x2F;p4-tutorial&#x2F;mytunnel后一行加上<br>“&#x2F;&#x2F;apps&#x2F;t4p4s&#x2F;l2fwdgen:onos-apps-t4p4s-l2fedgen-oar”:[],</li>
+<li>在~&#x2F;onos下重新bazel build onos </li>
+<li>bazel run onos-local – clean</li>
+</ol>
+<h1 id="连接T4P4s"><a href="#连接T4P4s" class="headerlink" title="连接T4P4s"></a>连接T4P4s</h1><p>启动pi_server<br>sudo .&#x2F;pi_server</p>
+<p>1 将P4Runtime_GRPCPP&#x2F;onos目录下的t4p4s文件复制到 ~&#x2F;onos&#x2F;apps下</p>
+<p>2 vim ~&#x2F;onos&#x2F;tools&#x2F;build&#x2F;bazel&#x2F;modules.bzl<br>在&#x2F;&#x2F;apps&#x2F;p4-tutorial&#x2F;mytunnel后一行加上<br>“&#x2F;&#x2F;apps&#x2F;t4p4s&#x2F;l2fwdgen:onos-apps-t4p4s-l2fedgen-oar”:[],</p>
+<p>3 在~&#x2F;onos下重新bazel build onos </p>
+<p>4 bazel run onos-local – clean </p>
+<p>5 onos localhost<br>   app activate bmv2<br>   app activate org.onosproject.t4p4s.l2fwdgen</p>
+<p>6 然后应加载netconf文件，以使该开关对于ONOS可见。<br>onos-netcfg localhost <gitrepo>\onos\netcfg.json （netcfg.json文件在的地方）<br>之后，ONOS连接到pi_server并将条目发送到dmac表</p>
+<p>7 将t4p4s_mod中的makefiles两个文件复制到<del>&#x2F;t4p4s&#x2F;makefiles下<br>   将t4p4s_mod中src&#x2F;hardware_indep&#x2F;下controlplane.py.c复制到</del>&#x2F;t4p4s&#x2F;src&#x2F;hardware_indep&#x2F;下<br>  更改178和211行为原来文件对应代码</p>
+<h3 id="再次启动时"><a href="#再次启动时" class="headerlink" title="再次启动时"></a>再次启动时</h3><p>1 只需要先启动dpdk系列操作<br>2 启动pi_server<br>3 启动onos<br>4 onos里加载bmv2 t4p4s.l2fwdgen<br>5 加载netcfg.json文件<br>6 启动.&#x2F;t4p4s :l2fwd</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>Ian Tang</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://tkhfree.github.io/2020/08/31/%E6%90%AD%E5%BB%BAP4RuntimeAPI/">https://tkhfree.github.io/2020/08/31/%E6%90%AD%E5%BB%BAP4RuntimeAPI/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/P4Runtime/"># P4Runtime</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2020/09/09/PacketIn-PacketOut%E4%BB%A3%E7%A0%81%E6%80%9D%E8%B7%AF/">PacketIn/PacketOut代码思路</a>
+            
+            
+            <a class="next" rel="next" href="/2020/08/27/P4Runtime%E4%BA%86%E8%A7%A3/">P4Runtime了解</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Ian Tang | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>

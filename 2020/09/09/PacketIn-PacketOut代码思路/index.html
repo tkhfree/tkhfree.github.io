@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Ian Tang">
+
+
+    <meta name="subtitle" content="岁月不居时节如流">
+
+
+    <meta name="description" content="好记性不如烂笔头">
+
+
+
+<title>PacketIn/PacketOut代码思路 | 随笔</title>
+
+
+
+    <link rel="icon" href="/image/The_Lion_King_32_32.png">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Tangkaifei&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Tangkaifei&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    var tocbot_timer;
+    var DEPTH_MAX = 6; // 为 6 时展开所有
+    var tocbot_default_config = {
+        tocSelector: '.tocbot-list',
+        contentSelector: '.post-content',
+        headingSelector: 'h1, h2, h3, h4, h5',
+        orderedList: false,
+        scrollSmooth: true,
+        onClick: extend_click,
+    };
+
+    function extend_click() {
+        clearTimeout(tocbot_timer);
+        tocbot_timer = setTimeout(function() {
+            tocbot.refresh(obj_merge(tocbot_default_config, {
+                hasInnerContainers: true
+            }));
+        }, 420); // 这个值是由 tocbot 源码里定义的 scrollSmoothDuration 得来的
+    }
+
+    document.ready(function() {
+        tocbot.init(obj_merge(tocbot_default_config, {
+            collapseDepth: 1
+        }));
+    });
+
+    function expand_toc() {
+        var b = document.querySelector('.tocbot-toc-expand');
+        var expanded = b.getAttribute('data-expanded');
+        expanded ? b.removeAttribute('data-expanded') : b.setAttribute('data-expanded', true);
+        tocbot.refresh(obj_merge(tocbot_default_config, {
+            collapseDepth: expanded ? 1 : DEPTH_MAX
+        }));
+        b.innerText = expanded ? 'Expand all' : 'Collapse all';
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function obj_merge(target, source) {
+        for (var item in source) {
+            if (source.hasOwnProperty(item)) {
+                target[item] = source[item];
+            }
+        }
+        return target;
+    }
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">PacketIn/PacketOut代码思路</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">Ian Tang</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">九月 9, 2020&nbsp;&nbsp;16:53:07</a>
+                        </span>
+                    
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p>packet-in与packet-out是控制平面与数据平面进行流交互的工具，因为不同于下流表或者交互配置信息等方式，packet-in&#x2F;out具有流形式和任意一端都可主动发起请求的特点，因此采用grpc的异步双向流交互进行通讯的工具。</p>
+<p><img src="https://pic.downk.cc/item/5fd9571a3ffa7d37b3b5a980.gif"></p>
+<p>业务逻辑上如下：</p>
+<h2 id="Packet-In"><a href="#Packet-In" class="headerlink" title="Packet-In"></a>Packet-In</h2><p>使用Packet-In消息的目的是为了将到达OpenFlow交换机的数据包发送至OpenFlow控制器。以下2种情况即可发送Packet-In消息。</p>
+<blockquote>
+<p>不存在与流表项一致的项目时（Table-miss），OFPR_NO_MATCH<br>匹配的流表项中记载的行动为“发送至OpenFlow控制器”时，OFPR_ACTION</p>
+</blockquote>
+<p>发送Packet-In消息时OpenFlow交换机分为两种情况，一种是缓存数据包，一种是不缓存数据包。如果不通过OpenFlow交换机缓存数据包，那么Packet-In消息的buffer_id字段设置为-1，将整个数据包发送至OpenFlow控制器。<br>如果通过OpenFlow交换机缓存数据包，那么以通过SET_CONFIG消息设置的miss_send_len为最大值的数据包数据将发送至OpenFlow控制器。<br>miss_send_len的默认值为128。未实施SET_CONFIG消息的交换时，使用该默认值。</p>
+<table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left"></th>
+<th align="left"></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">字段</td>
+<td align="left">比特数</td>
+<td align="left">内容</td>
+</tr>
+<tr>
+<td align="left">buffer_id</td>
+<td align="left">32</td>
+<td align="left">表示OpenFlow交换机中保存的数据包的缓存id</td>
+</tr>
+<tr>
+<td align="left">Total_len</td>
+<td align="left">16</td>
+<td align="left">帧的长度</td>
+</tr>
+<tr>
+<td align="left">in_port</td>
+<td align="left">16</td>
+<td align="left">接受帧的端口</td>
+</tr>
+<tr>
+<td align="left">reason</td>
+<td align="left">8</td>
+<td align="left">发送Packet-in消息的原因</td>
+</tr>
+<tr>
+<td align="left">pad</td>
+<td align="left">8</td>
+<td align="left">用于调整对齐的填充</td>
+</tr>
+<tr>
+<td align="left">data</td>
+<td align="left">任意</td>
+<td align="left">包含以太网帧的数据时使用的字段。</td>
+</tr>
+</tbody></table>
+<p>控制器通过grpc与交换机进行交互，因此在使用proto生成runtime库之后，在server端导入P4runtime库函数（p4runtime.pb.h、p4runtime.pb.cc、p4runtime.grpc.pb.h、p4runtime.grpc.pb.cc）后，启动监听ip和端口，注册proto文件中的rpc服务，等待stub的调用。</p>
+<h2 id="Packet-out"><a href="#Packet-out" class="headerlink" title="Packet-out"></a>Packet-out</h2><p>Packet-Out消息是从OpenFlow控制器向OpenFlow交换机发送的消息，是包含数据包发送命令的消息”。<br>若OpenFlow交换机的缓存中已存在数据包，而OpenFlow控制器发出“发送该数据包”的命令时，该消息指定了表示相应数据包的buffer_id。使用Packet-Out消息还可将OpenFlow控制器创建的数据包发送至OpenFlow交换机。此时，buffer_id置为-1，在Packet-Out消息的最后添加数据包数据。</p>
+<p><img src="https://pic.downk.cc/item/5f58a602160a154a67071313.jpg"></p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>比特数</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>buffer_id</td>
+<td>32</td>
+<td>表示OpenFlow交换机中保存的数据包的缓存id</td>
+</tr>
+<tr>
+<td>in_port</td>
+<td>16</td>
+<td>数据包的输入端口</td>
+</tr>
+<tr>
+<td>actions_len</td>
+<td>16</td>
+<td>行动信息的长度</td>
+</tr>
+</tbody></table>
+<h2 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h2><p>控制器与OpenFlow交换机在连接建立过程中会存在拓扑发现的环节，该环节会密集出现Packe-in&#x2F;out消息，其交互流程如下：</p>
+<p><img src="https://pic.downk.cc/item/5f58a655160a154a6707714c.jpg"></p>
+<p>1、 <a target="_blank" rel="noopener" href="https://www.baidu.com/s?wd=SDN%E6%8E%A7%E5%88%B6%E5%99%A8&tn=24004469_oem_dg&rsv_dl=gh_pl_sl_csd">SDN控制器</a>通过构造Packet-out消息，向交换机s1的三个端口分别发送上图所示的<a target="_blank" rel="noopener" href="https://baike.baidu.com/item/LLDP/6849522?fr=aladdin">LLDP</a>数据包。<br>2、 控制器向交换机s1下发流表，流表规则为：将从Controller端口收到的LLDP数据包从规定端口发送出去。<br>3、 控制器向交换机s2下发流表，流表规则为：将从非Controller接收到LLDP数据包发送给控制器。<br>4、 当LLDP数据包到达交换机s2，会触发Packet-in消息发往控制器。控制器通过解析LLDP数据包，得到链路的源交换机，源接口（s1,port1）。通过收到的Packet-in消息知道目的交换机(s2)。<br>5、 同理，当SDN控制器向交换机s2发送Packet-out消息时，可以得知链路源交换机，源接口（s2,port3)。通过收到的Packet-in消息知道目的交换机(s1)。如此，控制器便发现了s1与s2之间的完整链路。<br>对于存在多个交换机的网络，上述分析过程一样成立。</p>
+<h3 id="example"><a href="#example" class="headerlink" title="example"></a>example</h3><p>交换机存储的是MAC地址和端口的对应关系，同一子网主机传输报文通过ip地址，交换机第一次传输的时候不知道IP与MAC的对应关系，因此不知道从哪个端口转发，因此交换机会往所有端口进行转发数据包，而IP和MAC对应的主机就会回复，因此交换机就知道哪个端口对应的主机MAC地址，把这个关系加入到表中，这个过程就是交换机的MAC地址自学习。</p>
+<p>一般监控ARP数据包学习MAC地址，将ARP数据包通过Packet-in消息发送给OpenFlow控制器，可以在不过度加重OpenFlow控制器负载的情况下，实现MAC地址学习。</p>
+<p>假如PC-a发送数据给PC-b，但是它的ARP表里没有PC-b，所以它需要发送ARP包获取ARP回应以存储到ARP表中。</p>
+<p>PC-a发送ARP请求，OpenFlow交换机接收到该请求，检索流表，流表项的匹配字段是入端口，action是上报控制器，可以找找流表项的具体实现代码。</p>
+<p>流表的action的输出端口为controller，也就是上报给控制器。</p>
+<p>流表项匹配成功后，OpenFlow交换机执行通过Packet-in消息向控制器转发ARP请求帧的action，而控制器要做两个处理，一个是接受Packet-in，二是对Packet-in解码。</p>
+<p>为了将来PC-a的ARP请求广播到OpenFlow网络内</p>
+<p>ONOS对于Packet-in&#x2F;out消息的定义</p>
+<blockquote>
+<p>我们来看怎么样完成packet-in和packet-out的操作。这两个操作跟OpenFlow是类似的。</p>
+<p>我们看右边，在OpenFlow里面我们也会用到图中的第一块，Packet Service，不同的是在下面，对接的是PI框架的Packet Provider，因为在P4里面，数据包的格式是我们自定义的，所以在这里借助我们的Interpreter进行数据包的解析。解析之后，生成Inbound&#x2F;Outbound Packet，它们都是ONOS中原有的对packet-in&#x2F;out的抽象。</p>
+<p>接着，这里借助P4 Runtime设备驱动将其转换成PI Packet Operation，它是PI框架中对包操作的抽象。</p>
+<p>最后，再通过南向插件与设备交互，在这里同样借助P4Info完成PI框架抽象对象与通信报文的转换。</p>
+<p>在ONOS的源码中，现在已经有了一个名为p4-tutorial的示例应用，在onos&#x2F;apps目录下</p>
+</blockquote>
+<p><img src="https://pic.downk.cc/item/5f58a350160a154a6704771b.png"></p>
+<h2 id="Very-Simple-Switch-Architecture"><a href="#Very-Simple-Switch-Architecture" class="headerlink" title="Very Simple Switch Architecture"></a>Very Simple Switch Architecture</h2><p><img src="https://pic.downk.cc/item/5fa26e441cd1bbb86b19eb8b.jpg"></p>
+<p>白色是p4可编程模块，青色是固定模块，红色代表解析的报文流（用户定义的数据流），绿色是数据平面接口（固有元数据暴露的固定功能块和可编程块之间传递信息）</p>
+<h3 id="Arbiter-block"><a href="#Arbiter-block" class="headerlink" title="Arbiter block"></a>Arbiter block</h3><p>固定模块，仲裁器，从ethernet网卡、控制平面、recirculation port这三个port中的一个接受报文。如果从ethernet网卡接受报文，则需要进行校验，从payload去除尾部的校验，如果校验和不对就丢弃。如果报文较多，会触发仲裁算法，如果队列已满，则丢弃数据包。</p>
+<p>arbiter设置inctrl.inputport的值，这个值为了表明数据包从哪个端口进入的，是ethernet网卡、控制平面、recirculation port里的哪个。这作为pipeline的输入参数之一，这里用0-7表示网卡端口，13是recirculation端口，14是控制平面端口。</p>
+<h3 id="parser-runtime"><a href="#parser-runtime" class="headerlink" title="parser runtime"></a>parser runtime</h3><p>runtime block与解析器协同工作。如果parser错误的话，它提供error code作为pipeline的输入，并且它提供payload的信息（例如有效载荷的大小）给输出队列demux。parser完成解析数据包，就会使用关联的元数据（packet headers and user-defined metadata）作为输入调用pipeline模块。</p>
+<h3 id="demux"><a href="#demux" class="headerlink" title="demux"></a>demux</h3><p>demux的功能是接受deparser构造的headers和parser输出的payload，组装成一个新的数据包并发送到输出端口，输出端口由outctrl.outputport指定，由pipeline设置。指定的端口是四选一：drop、网卡端口（添加校验和）、recirculation给arbiter、控制平面端口（原始数据包，不是deparser构造的数据包，构造的数据包被丢弃）。</p>
+<h3 id="Available-extern-blocks"><a href="#Available-extern-blocks" class="headerlink" title="Available extern blocks"></a>Available extern blocks</h3><p>校验和功能checksum</p>
+<h3 id="A-complete-Very-Simple-Switch-program"><a href="#A-complete-Very-Simple-Switch-program" class="headerlink" title="A complete Very Simple Switch program"></a>A complete Very Simple Switch program</h3><p>这是个实现vss架构的P4程序例子，并没有完全调用架构提供的接口，比如recirculation。使用这个例子结合上面介绍的固定模块，实现ipv4数据包的转发。</p>
+<p><img src="https://pic.downk.cc/item/5fa356fc1cd1bbb86b44659e.jpg"></p>
+<p>解析器尝试识别Ethernet头和ipv4头，如果缺少任何一个header，则解析会因错误终止，它将这些headers中的信息放入到parser packet struct中。上图中的四个match-action单元由p4程序中table表示。</p>
+<p>第一个表ipv4_match使用ipv4目标地址决定下一跳的outputport和ipv4地址，如果查找失败，则丢弃数据包，该表还减少ttl值。路由表。</p>
+<p>第二个表检查ttl值，ttl&#x3D;0，则通过packet-in发送到控制平面</p>
+<p>第三个表使用由第一个表计算的下一跳的ipv4地址来构造目的ethernet地址，也就是通过arp获取ipv4对应的mac地址，arp表</p>
+<p>第四个表使用outputport来标识当前交换机的源Ethernet地址，该地址在传出的数据包中设置。</p>
+<p>deparser通过重新组装由pipeline计算出的Ethernet和IPv4标头来构造传出数据包。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Include P4 core library</span></span><br><span class="line"><span class="meta"># <span class="keyword">include</span> <span class="string">&lt;core.p4&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Include very simple switch architecture declarations</span></span><br><span class="line"><span class="meta"># <span class="keyword">include</span> <span class="string">&quot;very_simple_switch_model.p4&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// This program processes packets comprising an Ethernet and an IPv4</span></span><br><span class="line"><span class="comment">// header, and it forwards packets using the destination IP address</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> bit&lt;<span class="number">48</span>&gt;  EthernetAddress;</span><br><span class="line"><span class="keyword">typedef</span> bit&lt;<span class="number">32</span>&gt;  IPv4Address;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Standard Ethernet header</span></span><br><span class="line">header Ethernet_h &#123;</span><br><span class="line">    EthernetAddress dstAddr;</span><br><span class="line">    EthernetAddress srcAddr;</span><br><span class="line">    bit&lt;<span class="number">16</span>&gt;         etherType;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// IPv4 header (without options)</span></span><br><span class="line">header IPv4_h &#123;</span><br><span class="line">    bit&lt;<span class="number">4</span>&gt;       version;</span><br><span class="line">    bit&lt;<span class="number">4</span>&gt;       ihl;</span><br><span class="line">    bit&lt;<span class="number">8</span>&gt;       diffserv;</span><br><span class="line">    bit&lt;<span class="number">16</span>&gt;      totalLen;</span><br><span class="line">    bit&lt;<span class="number">16</span>&gt;      identification;</span><br><span class="line">    bit&lt;<span class="number">3</span>&gt;       flags;</span><br><span class="line">    bit&lt;<span class="number">13</span>&gt;      fragOffset;</span><br><span class="line">    bit&lt;<span class="number">8</span>&gt;       ttl;</span><br><span class="line">    bit&lt;<span class="number">8</span>&gt;       protocol;</span><br><span class="line">    bit&lt;<span class="number">16</span>&gt;      hdrChecksum;</span><br><span class="line">    IPv4Address  srcAddr;</span><br><span class="line">    IPv4Address  dstAddr;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Structure of parsed headers</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Parsed_packet</span> &#123;</span></span><br><span class="line">    Ethernet_h ethernet;</span><br><span class="line">    IPv4_h     ip;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Parser section</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// User-defined errors that may be signaled during parsing</span></span><br><span class="line">error &#123;</span><br><span class="line">    IPv4OptionsNotSupported,</span><br><span class="line">    IPv4IncorrectVersion,</span><br><span class="line">    IPv4ChecksumError</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">parser <span class="title function_">TopParser</span><span class="params">(packet_in b, out Parsed_packet p)</span> &#123;</span><br><span class="line">    Checksum16() ck;  <span class="comment">// instantiate checksum unit</span></span><br><span class="line"></span><br><span class="line">    state start &#123;</span><br><span class="line">        b.extract(p.ethernet);</span><br><span class="line">        transition <span class="title function_">select</span><span class="params">(p.ethernet.etherType)</span> &#123;</span><br><span class="line">            <span class="number">0x0800</span>: parse_ipv4;</span><br><span class="line">            <span class="comment">// no default rule: all other packets rejected</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    state parse_ipv4 &#123;</span><br><span class="line">        b.extract(p.ip);</span><br><span class="line">        verify(p.ip.version == <span class="number">4</span>w4, error.IPv4IncorrectVersion);</span><br><span class="line">        verify(p.ip.ihl == <span class="number">4</span>w5, error.IPv4OptionsNotSupported);</span><br><span class="line">        ck.clear();</span><br><span class="line">        ck.update(p.ip);</span><br><span class="line">        <span class="comment">// Verify that packet checksum is zero</span></span><br><span class="line">        verify(ck.get() == <span class="number">16</span>w0, error.IPv4ChecksumError);</span><br><span class="line">        transition accept;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Match-action pipeline section</span></span><br><span class="line"></span><br><span class="line">control <span class="title function_">TopPipe</span><span class="params">(inout Parsed_packet headers,</span></span><br><span class="line"><span class="params">                in error parseError, <span class="comment">// parser error</span></span></span><br><span class="line"><span class="params">                in InControl inCtrl, <span class="comment">// input port</span></span></span><br><span class="line"><span class="params">                out OutControl outCtrl)</span> &#123;</span><br><span class="line">     IPv4Address nextHop;  <span class="comment">// local variable</span></span><br><span class="line"></span><br><span class="line">     <span class="comment">/**</span></span><br><span class="line"><span class="comment">      * Indicates that a packet is dropped by setting the</span></span><br><span class="line"><span class="comment">      * output port to the DROP_PORT</span></span><br><span class="line"><span class="comment">      */</span></span><br><span class="line">      action <span class="title function_">Drop_action</span><span class="params">()</span> &#123;</span><br><span class="line">          outCtrl.outputPort = DROP_PORT;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">     <span class="comment">/**</span></span><br><span class="line"><span class="comment">      * Set the next hop and the output port.</span></span><br><span class="line"><span class="comment">      * Decrements ipv4 ttl field.</span></span><br><span class="line"><span class="comment">      * @param ivp4_dest ipv4 address of next hop</span></span><br><span class="line"><span class="comment">      * @param port output port</span></span><br><span class="line"><span class="comment">      */</span></span><br><span class="line">      action <span class="title function_">Set_nhop</span><span class="params">(IPv4Address ipv4_dest, PortId port)</span> &#123;</span><br><span class="line">          nextHop = ipv4_dest;</span><br><span class="line">          headers.ip.ttl = headers.ip.ttl - <span class="number">1</span>;</span><br><span class="line">          outCtrl.outputPort = port;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">     <span class="comment">/**</span></span><br><span class="line"><span class="comment">      * Computes address of next IPv4 hop and output port</span></span><br><span class="line"><span class="comment">      * based on the IPv4 destination of the current packet.</span></span><br><span class="line"><span class="comment">      * Decrements packet IPv4 TTL.</span></span><br><span class="line"><span class="comment">      * @param nextHop IPv4 address of next hop</span></span><br><span class="line"><span class="comment">      */</span></span><br><span class="line">     table ipv4_match &#123;</span><br><span class="line">         key = &#123; headers.ip.dstAddr: lpm; &#125;  <span class="comment">// longest-prefix match</span></span><br><span class="line">         actions = &#123;</span><br><span class="line">              Drop_action;</span><br><span class="line">              Set_nhop;</span><br><span class="line">         &#125;</span><br><span class="line">         size = <span class="number">1024</span>;</span><br><span class="line">         default_action = Drop_action;</span><br><span class="line">     &#125;</span><br><span class="line"></span><br><span class="line">     <span class="comment">/**</span></span><br><span class="line"><span class="comment">      * Send the packet to the CPU port</span></span><br><span class="line"><span class="comment">      */</span></span><br><span class="line">      action <span class="title function_">Send_to_cpu</span><span class="params">()</span> &#123;</span><br><span class="line">          outCtrl.outputPort = CPU_OUT_PORT;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">     <span class="comment">/**</span></span><br><span class="line"><span class="comment">      * Check packet TTL and send to CPU if expired.</span></span><br><span class="line"><span class="comment">      */</span></span><br><span class="line">     table check_ttl &#123;</span><br><span class="line">         key = &#123; headers.ip.ttl: exact; &#125;</span><br><span class="line">         actions = &#123; Send_to_cpu; NoAction; &#125;</span><br><span class="line">         <span class="type">const</span> default_action = NoAction; <span class="comment">// defined in core.p4</span></span><br><span class="line">     &#125;</span><br><span class="line"></span><br><span class="line">     <span class="comment">/**</span></span><br><span class="line"><span class="comment">      * Set the destination MAC address of the packet</span></span><br><span class="line"><span class="comment">      * @param dmac destination MAC address.</span></span><br><span class="line"><span class="comment">      */</span></span><br><span class="line">      action <span class="title function_">Set_dmac</span><span class="params">(EthernetAddress dmac)</span> &#123;</span><br><span class="line">          headers.ethernet.dstAddr = dmac;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">     <span class="comment">/**</span></span><br><span class="line"><span class="comment">      * Set the destination Ethernet address of the packet</span></span><br><span class="line"><span class="comment">      * based on the next hop IP address.</span></span><br><span class="line"><span class="comment">      * @param nextHop IPv4 address of next hop.</span></span><br><span class="line"><span class="comment">      */</span></span><br><span class="line">      table dmac &#123;</span><br><span class="line">          key = &#123; nextHop: exact; &#125;</span><br><span class="line">          actions = &#123;</span><br><span class="line">               Drop_action;</span><br><span class="line">               Set_dmac;</span><br><span class="line">          &#125;</span><br><span class="line">          size = <span class="number">1024</span>;</span><br><span class="line">          default_action = Drop_action;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">/**</span></span><br><span class="line"><span class="comment">       * Set the source MAC address.</span></span><br><span class="line"><span class="comment">       * @param smac: source MAC address to use</span></span><br><span class="line"><span class="comment">       */</span></span><br><span class="line">       action <span class="title function_">Set_smac</span><span class="params">(EthernetAddress smac)</span> &#123;</span><br><span class="line">           headers.ethernet.srcAddr = smac;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">/**</span></span><br><span class="line"><span class="comment">       * Set the source mac address based on the output port.</span></span><br><span class="line"><span class="comment">       */</span></span><br><span class="line">      table smac &#123;</span><br><span class="line">           key = &#123; outCtrl.outputPort: exact; &#125;</span><br><span class="line">           actions = &#123;</span><br><span class="line">                Drop_action;</span><br><span class="line">                Set_smac;</span><br><span class="line">          &#125;</span><br><span class="line">          size = <span class="number">16</span>;</span><br><span class="line">          default_action = Drop_action;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      apply &#123;</span><br><span class="line">          <span class="keyword">if</span> (parseError != error.NoError) &#123;</span><br><span class="line">              Drop_action();  <span class="comment">// invoke drop directly</span></span><br><span class="line">              <span class="keyword">return</span>;</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          ipv4_match.apply(); <span class="comment">// Match result will go into nextHop</span></span><br><span class="line">          <span class="keyword">if</span> (outCtrl.outputPort == DROP_PORT) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">          check_ttl.apply();</span><br><span class="line">          <span class="keyword">if</span> (outCtrl.outputPort == CPU_OUT_PORT) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">          dmac.apply();</span><br><span class="line">          <span class="keyword">if</span> (outCtrl.outputPort == DROP_PORT) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">          smac.apply();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// deparser section</span></span><br><span class="line">control <span class="title function_">TopDeparser</span><span class="params">(inout Parsed_packet p, packet_out b)</span> &#123;</span><br><span class="line">    Checksum16() ck;</span><br><span class="line">    apply &#123;</span><br><span class="line">        b.emit(p.ethernet);</span><br><span class="line">        <span class="keyword">if</span> (p.ip.isValid()) &#123;</span><br><span class="line">            ck.clear();              <span class="comment">// prepare checksum unit</span></span><br><span class="line">            p.ip.hdrChecksum = <span class="number">16</span>w0; <span class="comment">// clear checksum</span></span><br><span class="line">            ck.update(p.ip);         <span class="comment">// compute new checksum.</span></span><br><span class="line">            p.ip.hdrChecksum = ck.get();</span><br><span class="line">        &#125;</span><br><span class="line">        b.emit(p.ip);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Instantiate the top-level VSS package</span></span><br><span class="line">VSS(TopParser(),</span><br><span class="line">    TopPipe(),</span><br><span class="line">    TopDeparser()) main;</span><br></pre></td></tr></table></figure>
+
+<h3 id="table"><a href="#table" class="headerlink" title="table"></a>table</h3><p><img src="https://pic.downk.cc/item/5fa3a3551cd1bbb86b554906.jpg"></p>
+<h2 id="v1model架构"><a href="#v1model架构" class="headerlink" title="v1model架构"></a>v1model架构</h2><p><a target="_blank" rel="noopener" href="https://github.com/p4lang/behavioral-model/blob/master/docs/simple_switch.md">github refer</a></p>
+<p>v1model架构是bmv2正在用的架构，还有一个新的PSA(portable switch architecture)架构正在开发中。</p>
+<h3 id="standard-metadata"><a href="#standard-metadata" class="headerlink" title="standard metadata"></a>standard metadata</h3><ul>
+<li>ingress port：只读，对于新报文，是数据包到达设备的入口端口号；</li>
+<li>packet_length：对于新报文或者recirculation报文的字节长度，对于克隆或者resubmitted，需要保存这个值，否则是0；</li>
+<li>egress_spec：在ingress代码中控制报文的输出端口。p4_14里的drop或者v1model里的mark_to_drop的action是给这个值分配DROP_PORT（511），这样的话如果在ingress程序的末尾被赋予这个值，该数据包则被丢弃，不会存储在数据包buffer里，也不会发送到egress程序；</li>
+<li>egress_port：只读，在egress程序期间决定数据包要被发送的输出端口；</li>
+<li>egress_instance：重命名egress_ride；</li>
+<li>instance_type：p4代码可以读取的值，在ingress代码部分可以分辨这个数据包是从新端口读取的（normal），还是重新提交的（resubmit），还是循环过来的（recirc）。在egress代码中，这个值可以分辨数据包是否由ingress克隆到egress（ingress_clone），还是egress克隆的（egress_clone），还是在ingress代码中设定的多播（replication）复制的结果，也可以不选择任何一个，就是来自ingress的正常报文（normal）；</li>
+<li>parser_error：erro.NoError是正常或者parser_status&#x3D;0（p4_14）</li>
+<li>check_sum：只读，对verify_checksum进行调用，如果错误则为1。在ingress之前和parser之后的verifychecksum的控件中调用。</li>
+</ul>
+<h3 id="intrinsic-metadata"><a href="#intrinsic-metadata" class="headerlink" title="intrinsic metadata"></a>intrinsic metadata</h3><p>intrinsic metadata相比standard metadata可以提供更多的功能，但是intrinsic metadata不是必须要提供的。</p>
+<h4 id="intrinsic-metadata-header"><a href="#intrinsic-metadata-header" class="headerlink" title="intrinsic_metadata header"></a>intrinsic_metadata header</h4><p>如果使用p4_16的v1model架构，这些都被定义在standard_metadata_t的struct里。</p>
+<p>如果使用P4_14的simple_switch架构</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">header_type <span class="type">intrinsic_metadata_t</span> &#123;</span><br><span class="line">    fields &#123;</span><br><span class="line">        ingress_global_timestamp : <span class="number">48</span>;</span><br><span class="line">        egress_global_timestamp : <span class="number">48</span>;</span><br><span class="line">        mcast_grp : <span class="number">16</span>; <span class="comment">//multicast feature</span></span><br><span class="line">        egress_rid : <span class="number">16</span>; <span class="comment">//multicast featue</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">metadata <span class="type">intrinsic_metadata_t</span> intrinsic_metadata;</span><br></pre></td></tr></table></figure>
+
+<h4 id="queueing-metadata-header"><a href="#queueing-metadata-header" class="headerlink" title="queueing_metadata header"></a>queueing_metadata header</h4><p>如果使用p4_16的v1model架构，这些都被定义在standard_metadata_t的struct里。</p>
+<p>如果使用P4_14的simple_switch架构,并且需要在ingress或者egress pipeline访问队列信息才需要定义</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">header_type <span class="type">queueing_metadata_t</span> &#123;</span><br><span class="line">    fields &#123;</span><br><span class="line">        enq_timestamp : <span class="number">48</span>;</span><br><span class="line">        enq_qdepth : <span class="number">16</span>;</span><br><span class="line">        deq_timedelta : <span class="number">32</span>;</span><br><span class="line">        deq_qdepth : <span class="number">16</span>;</span><br><span class="line">        qid : <span class="number">8</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">metadata <span class="type">queueing_metadata_t</span> queueing_metadata;</span><br></pre></td></tr></table></figure>
+
+<h3 id="支持的actions"><a href="#支持的actions" class="headerlink" title="支持的actions"></a>支持的actions</h3><p>在ingress或者egress程序的末尾发生的actions</p>
+<p>伪代码ingress process pseudocode：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (a clone primitive action was called) &#123;</span><br><span class="line">    <span class="function">create <span class="title">clone</span><span class="params">(s)</span> of the packet with details configured <span class="keyword">for</span> the clone session</span></span><br><span class="line"><span class="function">&#125;</span></span><br><span class="line"><span class="function"><span class="title">if</span> <span class="params">(digest to generate)</span> </span>&#123;   <span class="comment">// because your code called generate_digest</span></span><br><span class="line">    send a digest message to the control plane software</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (resubmit was called) &#123;</span><br><span class="line">    start ingress processing over again <span class="keyword">for</span> the original packet</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (mcast_grp != <span class="number">0</span>) &#123;  <span class="comment">// because your code assigned a value to mcast_grp</span></span><br><span class="line">    multicast the packet to the output <span class="built_in">port</span>(s) configured <span class="keyword">for</span> group mcast_grp</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (egress_spec == DROP_PORT) &#123;  <span class="comment">// e.g. because your code called drop/mark_to_drop</span></span><br><span class="line">    Drop packet.</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    unicast the packet to the port equal to egress_spec</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>伪代码egress process pseudocode：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (a clone primitive action was called) &#123;</span><br><span class="line">    <span class="function">create <span class="title">clone</span><span class="params">(s)</span> of the packet with details configured <span class="keyword">for</span> the clone session</span></span><br><span class="line"><span class="function">&#125;</span></span><br><span class="line"><span class="function"><span class="title">if</span> <span class="params">(egress_spec == DROP_PORT)</span> </span>&#123;  <span class="comment">// e.g. because your code called drop/mark_to_drop</span></span><br><span class="line">    Drop packet.</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (recirculate was called) &#123;</span><br><span class="line">    after deparsing, deparsed packet starts over again as input to parser</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    Send the packet to the port in egress_port.</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="支持的table-match"><a href="#支持的table-match" class="headerlink" title="支持的table match"></a>支持的table match</h3><ul>
+<li><code>exact</code> - from P4_16 language specification</li>
+<li><code>lpm</code> - from P4_16 language specification</li>
+<li><code>ternary</code> - from P4_16 language specification</li>
+<li><code>optional</code> - defined in <code>v1model.p4</code></li>
+<li><code>range</code> - defined in <code>v1model.p4</code></li>
+<li><code>selector</code> - defined in <code>v1model.p4</code></li>
+</ul>
+<p>如果一个表具有多个lpm键字段，则p4c BMv2后端将拒绝该表；selector只支持具有实现selector action的table。</p>
+<h4 id="通过const-entries为table-match指定匹配条件"><a href="#通过const-entries为table-match指定匹配条件" class="headerlink" title="通过const entries为table match指定匹配条件"></a>通过const entries为table match指定匹配条件</h4><p>example:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line">header <span class="type">h1_t</span> &#123;</span><br><span class="line">    bit&lt;<span class="number">8</span>&gt; f1;</span><br><span class="line">    bit&lt;<span class="number">8</span>&gt; f2;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">headers_t</span> &#123;</span><br><span class="line">    <span class="type">h1_t</span> h1;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ... later ...</span></span><br><span class="line"></span><br><span class="line"><span class="function">control <span class="title">ingress</span><span class="params">(inout <span class="type">headers_t</span> hdr,</span></span></span><br><span class="line"><span class="params"><span class="function">                inout <span class="type">metadata_t</span> m,</span></span></span><br><span class="line"><span class="params"><span class="function">                inout <span class="type">standard_metadata_t</span> stdmeta)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function">action <span class="title">a</span><span class="params">(bit&lt;<span class="number">9</span>&gt; x)</span> </span>&#123; stdmeta.egress_spec = x; &#125;</span><br><span class="line">    table t1 &#123;</span><br><span class="line">        key = &#123; hdr.h1.f1 : range; &#125;</span><br><span class="line">        actions = &#123; a; &#125;</span><br><span class="line">        <span class="type">const</span> entries = &#123;</span><br><span class="line">             <span class="number">1</span> ..  <span class="number">8</span> : <span class="built_in">a</span>(<span class="number">1</span>);</span><br><span class="line">             <span class="number">6</span> .. <span class="number">12</span> : <span class="built_in">a</span>(<span class="number">2</span>);  <span class="comment">// ranges are allowed to overlap between entries</span></span><br><span class="line">            <span class="number">15</span> .. <span class="number">15</span> : <span class="built_in">a</span>(<span class="number">3</span>);</span><br><span class="line">            <span class="number">17</span>       : <span class="built_in">a</span>(<span class="number">4</span>);  <span class="comment">// equivalent to 17 .. 17</span></span><br><span class="line">            <span class="comment">// It is not required to have a &quot;match anything&quot; rule in a table,</span></span><br><span class="line">            <span class="comment">// but it is allowed (except for exact match fields), and several of</span></span><br><span class="line">            <span class="comment">// these examples have one.</span></span><br><span class="line">            _        : <span class="built_in">a</span>(<span class="number">5</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    table t2 &#123;</span><br><span class="line">        key = &#123; hdr.h1.f1 : ternary; &#125;</span><br><span class="line">        actions = &#123; a; &#125;</span><br><span class="line">        <span class="comment">// There is no requirement to specify ternary match criteria using</span></span><br><span class="line">        <span class="comment">// hexadecimal values.  I personally prefer it to make the mask bit</span></span><br><span class="line">        <span class="comment">// positions more obvious.</span></span><br><span class="line">        <span class="type">const</span> entries = &#123;</span><br><span class="line">            <span class="number">0x04</span> &amp;&amp;&amp; <span class="number">0xfc</span> : <span class="built_in">a</span>(<span class="number">1</span>);</span><br><span class="line">            <span class="number">0x40</span> &amp;&amp;&amp; <span class="number">0x72</span> : <span class="built_in">a</span>(<span class="number">2</span>);</span><br><span class="line">            <span class="number">0x50</span> &amp;&amp;&amp; <span class="number">0xff</span> : <span class="built_in">a</span>(<span class="number">3</span>);</span><br><span class="line">            <span class="number">0xfe</span>          : <span class="built_in">a</span>(<span class="number">4</span>);  <span class="comment">// equivalent to 0xfe &amp;&amp;&amp; 0xff</span></span><br><span class="line">            _             : <span class="built_in">a</span>(<span class="number">5</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    table t3 &#123;</span><br><span class="line">        key = &#123;</span><br><span class="line">            hdr.h1.f1 : optional;</span><br><span class="line">            hdr.h1.f2 : optional;</span><br><span class="line">        &#125;</span><br><span class="line">        actions = &#123; a; &#125;</span><br><span class="line">        <span class="type">const</span> entries = &#123;</span><br><span class="line">            <span class="comment">// Note that when there are two or more fields in the key of a</span></span><br><span class="line">            <span class="comment">// table, const entries key select expressions must be surrounded by</span></span><br><span class="line">            <span class="comment">// parentheses.</span></span><br><span class="line">            (<span class="number">47</span>, <span class="number">72</span>) : <span class="built_in">a</span>(<span class="number">1</span>);</span><br><span class="line">            ( _, <span class="number">72</span>) : <span class="built_in">a</span>(<span class="number">2</span>);</span><br><span class="line">            ( _, <span class="number">75</span>) : <span class="built_in">a</span>(<span class="number">3</span>);</span><br><span class="line">            (<span class="number">49</span>,  _) : <span class="built_in">a</span>(<span class="number">4</span>);</span><br><span class="line">            _        : <span class="built_in">a</span>(<span class="number">5</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    table t4 &#123;</span><br><span class="line">        key = &#123; hdr.h1.f1 : lpm; &#125;</span><br><span class="line">        actions = &#123; a; &#125;</span><br><span class="line">        <span class="type">const</span> entries = &#123;</span><br><span class="line">            <span class="number">0x04</span> &amp;&amp;&amp; <span class="number">0xfc</span> : <span class="built_in">a</span>(<span class="number">1</span>);</span><br><span class="line">            <span class="number">0x40</span> &amp;&amp;&amp; <span class="number">0xf8</span> : <span class="built_in">a</span>(<span class="number">2</span>);</span><br><span class="line">            <span class="number">0x04</span> &amp;&amp;&amp; <span class="number">0xff</span> : <span class="built_in">a</span>(<span class="number">3</span>);</span><br><span class="line">            <span class="number">0xf9</span>          : <span class="built_in">a</span>(<span class="number">4</span>);  <span class="comment">// equivalent to 0xf9 &amp;&amp;&amp; 0xff</span></span><br><span class="line">            _             : <span class="built_in">a</span>(<span class="number">5</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    table t5 &#123;</span><br><span class="line">        key = &#123; hdr.h1.f1 : exact; &#125;</span><br><span class="line">        actions = &#123; a; &#125;</span><br><span class="line">        <span class="type">const</span> entries = &#123;</span><br><span class="line">            <span class="number">0x04</span> : <span class="built_in">a</span>(<span class="number">1</span>);</span><br><span class="line">            <span class="number">0x40</span> : <span class="built_in">a</span>(<span class="number">2</span>);</span><br><span class="line">            <span class="number">0x05</span> : <span class="built_in">a</span>(<span class="number">3</span>);</span><br><span class="line">            <span class="number">0xf9</span> : <span class="built_in">a</span>(<span class="number">4</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// ... more code here ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="测试说明"><a href="#测试说明" class="headerlink" title="测试说明"></a>测试说明</h2><h3 id="测试要求"><a href="#测试要求" class="headerlink" title="测试要求"></a>测试要求</h3><p><strong>Ø</strong> ****测试集合2****·</p>
+<ol>
+<li><p>启动交换机，配置p4程序，default action默认为packet_in, 加载空流表；</p>
+</li>
+<li><p>打入IPv4数据包，在外部接口处可检测到对应的packet_in数据包；</p>
+</li>
+<li><p>打入Ipv6数据包，在外部接口处可检测到对应的packet_in数据包；</p>
+</li>
+<li><p>打入Geo数据包，在外部接口处可检测到对应的packet_in数据包；</p>
+</li>
+</ol>
+<p><strong>Ø</strong> <em><strong>*测试集合*</strong></em><em><strong>*3*</strong></em></p>
+<ol>
+<li><p>启动交换机，配置p4程序，default action默认为packet_in, 加载空流表；</p>
+</li>
+<li><p>控制器打入IPv4的packet_out消息，从对应的平台数据接口检测到输出的IPv4数据包；</p>
+</li>
+<li><p>控制器打入IPv6的packet_out消息，从对应的平台数据接口检测到输出的IPv6数据包；</p>
+</li>
+<li><p>控制器打入Geo的packet_out消息，从对应的平台数据接口检测到输出的Geo数据包；</p>
+</li>
+</ol>
+<p>测试Packet-In的话，需要把handleRPC函数里的new StreamChannelImpl注释掉，因为这个创建的是server端读模式。</p>
+<p>测试packet-out，则需要把StreamChannelImpl类里的new_responder_created(true)改成new_responder_created(false)。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>Ian Tang</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://tkhfree.github.io/2020/09/09/PacketIn-PacketOut%E4%BB%A3%E7%A0%81%E6%80%9D%E8%B7%AF/">https://tkhfree.github.io/2020/09/09/PacketIn-PacketOut%E4%BB%A3%E7%A0%81%E6%80%9D%E8%B7%AF/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2020/09/09/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/">网络协议</a>
+            
+            
+            <a class="next" rel="next" href="/2020/08/31/%E6%90%AD%E5%BB%BAP4RuntimeAPI/">搭建P4RuntimeAPI</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Ian Tang | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>

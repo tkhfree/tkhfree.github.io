@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Ian Tang">
+
+
+    <meta name="subtitle" content="岁月不居时节如流">
+
+
+    <meta name="description" content="好记性不如烂笔头">
+
+
+
+<title>WSGI网关协议理解 | 随笔</title>
+
+
+
+    <link rel="icon" href="/image/The_Lion_King_32_32.png">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+            <!-- MathJax配置，可通过单美元符号书写行内公式等 -->
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+    "HTML-CSS": {
+        preferredFont: "TeX",
+        availableFonts: ["STIX","TeX"],
+        linebreaks: { automatic:true },
+        EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50)
+    },
+    tex2jax: {
+        inlineMath: [ ["$", "$"], ["\\(","\\)"] ],
+        processEscapes: true,
+        ignoreClass: "tex2jax_ignore|dno",
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+        equationNumbers: { autoNumber: "AMS" },
+        noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } },
+        Macros: { href: "{}" }
+    },
+    messageStyle: "none"
+    });
+</script>
+<!-- 给MathJax元素添加has-jax class -->
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+<!-- 通过连接CDN加载MathJax的js代码 -->
+<script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+
+
+        
+    
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Tangkaifei&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Tangkaifei&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    var tocbot_timer;
+    var DEPTH_MAX = 6; // 为 6 时展开所有
+    var tocbot_default_config = {
+        tocSelector: '.tocbot-list',
+        contentSelector: '.post-content',
+        headingSelector: 'h1, h2, h3, h4, h5',
+        orderedList: false,
+        scrollSmooth: true,
+        onClick: extend_click,
+    };
+
+    function extend_click() {
+        clearTimeout(tocbot_timer);
+        tocbot_timer = setTimeout(function() {
+            tocbot.refresh(obj_merge(tocbot_default_config, {
+                hasInnerContainers: true
+            }));
+        }, 420); // 这个值是由 tocbot 源码里定义的 scrollSmoothDuration 得来的
+    }
+
+    document.ready(function() {
+        tocbot.init(obj_merge(tocbot_default_config, {
+            collapseDepth: 1
+        }));
+    });
+
+    function expand_toc() {
+        var b = document.querySelector('.tocbot-toc-expand');
+        var expanded = b.getAttribute('data-expanded');
+        expanded ? b.removeAttribute('data-expanded') : b.setAttribute('data-expanded', true);
+        tocbot.refresh(obj_merge(tocbot_default_config, {
+            collapseDepth: expanded ? 1 : DEPTH_MAX
+        }));
+        b.innerText = expanded ? 'Expand all' : 'Collapse all';
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function obj_merge(target, source) {
+        for (var item in source) {
+            if (source.hasOwnProperty(item)) {
+                target[item] = source[item];
+            }
+        }
+        return target;
+    }
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">WSGI网关协议理解</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">Ian Tang</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">五月 7, 2020&nbsp;&nbsp;15:46:46</a>
+                        </span>
+                    
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p><strong>网关协议</strong>是一个链接浏览器与服务器端的框架协议</p>
+<p>B端发送request请求到服务器，服务器针对请求在路径文件夹内返回html文件给浏览器展示。</p>
+<p>对于静态请求可以用nginx作为server，可以处理高并发。</p>
+<p>对于动态请求可以用apache作为server，处理这些动态请求需要编写专门的动态application来处理数据返回给server。</p>
+<p><strong>问题：</strong></p>
+<ul>
+<li>需要花费大量的精力去处理server与application之间的通讯和传输。</li>
+<li>如果换一个server，例如apache换成nginx，则applicaiton所写的接口全都不能用.</li>
+<li>一种动态请求处理函数只针对一种情况，对于每种情况都写请求函数则存在大量的代码复用。</li>
+</ul>
+<p><strong>解决：</strong></p>
+<ul>
+<li>使用一个web app开发框架，基于网关协议标准实现。则不管server或者app怎么变换改动都遵循同一个网关标准。</li>
+<li>CGI网关协议标准     FastCGI     </li>
+<li>WSGI网关协议标准一开始是专门开发出来解决python后端同server接驳的框架，有了这个标准就不用考虑server是怎么运行的，只要application符合这个标准接口去开发，则可以移植到任何支持WSGI的server端。</li>
+<li>keystone就是一个python开源的基于WSGI接口标准的application</li>
+</ul>
+<h3 id="WSGI中间件"><a href="#WSGI中间件" class="headerlink" title="WSGI中间件"></a><strong>WSGI中间件</strong></h3><p>WSGI中间件就是处于application和server之间的middleware。有点像nginx的正向代理&#x2F;反向代理。中间件对于application是server，对于服务器是应用程序。中间件可以做一些缓存的功能，同时降低了server与app的耦合。</p>
+<p><em><font size=2>正向代理：把nginx作为客户端去访问server，需要客户端设置代理服务器的ip、port等。</font></em></p>
+<p><em><font size=2>反向代理：把nginx作为server端接收Browser的请求，并根据设置把请求分发到真正的服务器，对于客户端来说，nginx 就是一个server。</font></em></p>
+<p>WSGI: web server（WSGI server） – middleware – WSGI application</p>
+<ul>
+<li>建立socket，监听端口，等待request</li>
+<li>解析信息，放到环境变量environ中，调用绑定的handler处理请求</li>
+<li>handler解析请求，将method、path放入environ中</li>
+<li>handler将一些服务器端信息也放入environ中</li>
+<li>WSGI handler调用WSGI application ，将environ和回调函数传给WSGI app</li>
+<li>app将response包含head&#x2F;body&#x2F;status等传给handler</li>
+<li>handler 通过socke传给客户端</li>
+</ul>
+<p>所以从以上过程路我们知道application接受两个参数：<strong>environ</strong>和<strong>start_response</strong>。</p>
+<h3 id="WSGI三个特征"><a href="#WSGI三个特征" class="headerlink" title="WSGI三个特征"></a>WSGI三个特征</h3><ol>
+<li><p>是一个可调用的对象</p>
+<p>WSGI的可调用对象的形式有函数、类、类的实例</p>
+<table>
+<thead>
+<tr>
+<th align="center">形式</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">函数</td>
+<td align="center">WSGI application直接调用，函数里参数有environ、start_response这两个参数</td>
+</tr>
+<tr>
+<td align="center">类的实例</td>
+<td align="center">类必须有__call__函数，参数是environ、response，web server会调用__call__函数</td>
+</tr>
+<tr>
+<td align="center">类</td>
+<td align="center">类必须有__call__函数，参数是environ、response，web server会创建这个类实例，调用实例的__call__函数</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>包含environ和start_response两个参数</p>
+<p>web server调用这个可调入对象时会传入两个参数</p>
+<ul>
+<li><p>environ：CGI相关的环境变量、操作系统相关的环境变量（非必须）、WSGI相关的环境变量、服务器自定义的环境变量（非必须）</p>
+</li>
+<li><p>start_response：是web server传递给WSGI application的一个callable object。有点绕，从server看，WSGI application本身就是一个callable object，再给它传递一个callable object，start_response表现形式是一个函数</p>
+<p>start_response(status, response_header, exc_info&#x3D;None) </p>
+<p>status是状态码。response_header是列表，形式是（header_name, header_value）。exc_info是错误处理</p>
+</li>
+</ul>
+</li>
+<li><p>有一个可迭代的返回值</p>
+<p>example：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">my_app</span>(<span class="params">environ start_respones</span>):</span><br><span class="line">    <span class="keyword">if</span>(今天股票大涨):</span><br><span class="line">        <span class="keyword">return</span> your_app(environ, start_response)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        start_response(<span class="string">&quot;200 ok&quot;</span>, [(<span class="string">&quot;Content-Type&quot;</span>,<span class="string">&quot;text/heml&quot;</span>)])</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&#x27;hello,stock&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>两种回复值，如果它web server收到else响应，那么它就以这个返回值响应它的client的请求；如果收到if响应，则调用Your_app继续迭代下去。</p>
+</li>
+</ol>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>Ian Tang</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://tkhfree.github.io/2020/05/07/WSGI%E7%BD%91%E5%85%B3%E5%8D%8F%E8%AE%AE%E7%90%86%E8%A7%A3/">https://tkhfree.github.io/2020/05/07/WSGI%E7%BD%91%E5%85%B3%E5%8D%8F%E8%AE%AE%E7%90%86%E8%A7%A3/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Python/"># Python</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2020/05/08/SDN/">SDN定义概念</a>
+            
+            
+            <a class="next" rel="next" href="/2019/10/25/hadoop%E7%9A%84%E4%BB%8B%E7%BB%8D%E4%BA%8C-hdfs/">hadoop的介绍二-hdfs</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Ian Tang | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>

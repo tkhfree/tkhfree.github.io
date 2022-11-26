@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Ian Tang">
+
+
+    <meta name="subtitle" content="岁月不居时节如流">
+
+
+    <meta name="description" content="好记性不如烂笔头">
+
+
+
+<title>P4入门 | 随笔</title>
+
+
+
+    <link rel="icon" href="/image/The_Lion_King_32_32.png">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Tangkaifei&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Tangkaifei&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    var tocbot_timer;
+    var DEPTH_MAX = 6; // 为 6 时展开所有
+    var tocbot_default_config = {
+        tocSelector: '.tocbot-list',
+        contentSelector: '.post-content',
+        headingSelector: 'h1, h2, h3, h4, h5',
+        orderedList: false,
+        scrollSmooth: true,
+        onClick: extend_click,
+    };
+
+    function extend_click() {
+        clearTimeout(tocbot_timer);
+        tocbot_timer = setTimeout(function() {
+            tocbot.refresh(obj_merge(tocbot_default_config, {
+                hasInnerContainers: true
+            }));
+        }, 420); // 这个值是由 tocbot 源码里定义的 scrollSmoothDuration 得来的
+    }
+
+    document.ready(function() {
+        tocbot.init(obj_merge(tocbot_default_config, {
+            collapseDepth: 1
+        }));
+    });
+
+    function expand_toc() {
+        var b = document.querySelector('.tocbot-toc-expand');
+        var expanded = b.getAttribute('data-expanded');
+        expanded ? b.removeAttribute('data-expanded') : b.setAttribute('data-expanded', true);
+        tocbot.refresh(obj_merge(tocbot_default_config, {
+            collapseDepth: expanded ? 1 : DEPTH_MAX
+        }));
+        b.innerText = expanded ? 'Expand all' : 'Collapse all';
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function obj_merge(target, source) {
+        for (var item in source) {
+            if (source.hasOwnProperty(item)) {
+                target[item] = source[item];
+            }
+        }
+        return target;
+    }
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">P4入门</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">Ian Tang</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">八月 23, 2020&nbsp;&nbsp;4:20:16</a>
+                        </span>
+                    
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p>P4是一门封包处理器描述语言：</p>
+<ul>
+<li><p>无协议protocol限制</p>
+<p>可以很有弹性的处理任何协议</p>
+</li>
+<li><p>无目标target限制</p>
+<p>可以描述不同的目标，从高速的ASIC到软件交换机</p>
+</li>
+<li><p>可重新组态的网络</p>
+<p>可以在部署好网络之后再重新定义</p>
+</li>
+</ul>
+<p><img src="https://pic.downk.cc/item/5f4ceb4b160a154a67f53ef6.jpg"></p>
+<p>P4项目由很多个单独的模块组成，每个模块就是一个子项目，下面分别简单介绍一下各模块的功能。</p>
+<h1 id="（1）behavioral-model"><a href="#（1）behavioral-model" class="headerlink" title="（1）behavioral-model"></a><strong>（1）behavioral-model</strong></h1><p>模拟P4数据平面的用户态软件交换机，使用C++语言编写，简称bmv2。P4程序首先经过p4c-bm模块编译成JSON格式的配置文件，然后将配置文件载入到bmv2，转化成能实现交换机功能的数据结构。</p>
+<p>behavioral-model模块是架构无关的，可以实现各种P4编程目标。该模块主要实现三个目标，其中最重要的是simple_switch,即实现P4语言标准中抽象交换机模型。另外两个目标是（simple_router,l2_switch），这两个目标是作为教学示例。</p>
+<h1 id="（2）p4-hlir"><a href="#（2）p4-hlir" class="headerlink" title="（2）p4-hlir"></a><strong>（2）p4-hlir</strong></h1><p>将P4代码转换成高级中间表示的前端编译器，目前的高级中间表示的展示形式与python对象的层次结构相同。该编译器的目的是使得后端编译器开发者从语法分析和目标无关的语义检查的负担中解放出来。</p>
+<h1 id="（3）p4c-bm"><a href="#（3）p4c-bm" class="headerlink" title="（3）p4c-bm"></a><strong>（3）p4c-bm</strong></h1><p>behavioral modal的后端编译器，建立在p4-hilr的顶部，该模块以P4程序作为输入，输出一个可以载入到behavioral model的JSON配置文件。</p>
+<h1 id="（4）p4-build"><a href="#（4）p4-build" class="headerlink" title="（4）p4-build"></a><strong>（4）p4-build</strong></h1><p>需要手动生成的基础设施库，为执行P4程序编译、安装PD库。</p>
+<h1 id="（5）switch"><a href="#（5）switch" class="headerlink" title="（5）switch"></a><strong>（5）switch</strong></h1><p>内含switch.p4程序样例以及通过SAI、SwitchAPI和Switchlink操作交换机所需的所有库，可独立于p4factory运行 。</p>
+<h1 id="（6）ntf（Network-Test-Framework）"><a href="#（6）ntf（Network-Test-Framework）" class="headerlink" title="（6）ntf（Network Test Framework）"></a><strong>（6）ntf（Network Test Framework）</strong></h1><p>网络测试框架，内含用以执行bmv2上应用的网络测试样例。该框架中集成了mininet和docker，方便用户进行测试。</p>
+<h1 id="（7）p4factory"><a href="#（7）p4factory" class="headerlink" title="（7）p4factory"></a><strong>（7）p4factory</strong></h1><p>内含整套用以运行和开发基于behavioral model的P4程序环境的代码，帮助用户快速开发P4程序。</p>
+<h1 id="（8）ptf"><a href="#（8）ptf" class="headerlink" title="（8）ptf"></a><strong>（8）ptf</strong></h1><p>数据平面测试框架，基于unittest框架实现，内含标准Python版本。该框架中的大部分代码从floodlight项目中的OFTest框架移植而来，框架的实现和开发可参考OFTest框架文档。</p>
+<h1 id="（9）scapy-vxlan"><a href="#（9）scapy-vxlan" class="headerlink" title="（9）scapy-vxlan"></a><strong>（9）scapy-vxlan</strong></h1><p>基于Scapy项目，barefoot对其进行了定制，支持更多协议的数据包包头的伪造和解析，目前支持 VXLAN和ERSPAN-like（Scapy本身并不支持）。</p>
+<h1 id="（10）tutorials"><a href="#（10）tutorials" class="headerlink" title="（10）tutorials"></a><strong>（10）tutorials</strong></h1><p>P4语言教程，内含8个教程,覆盖了P4语言中的解析器、动作、状态存储、匹配-动作表、等基础组件。<br>1）cpoy_to_cpu：基本动作clone_ingress_to_egress教程<br>2）meter：计量表教程<br>3）TLV_parsing：IPv4数据包解析教程<br>4）register：寄存器读写状态教程<br>5）counter：计数器教程<br>6）action_profile：ECMP动作摘要教程<br>7）resubmit：数据包冲提交到入端口流水线教程<br>8）simple_nat：TCP流量的完全圆锥形NAT网络教程<br>注：P4语言项目库中的SAI、mininet及thrift是从其他开源项目完全fork而来，这里不展开讨论。</p>
+<h1 id="Parser"><a href="#Parser" class="headerlink" title="Parser"></a>Parser</h1><p>Parser包含两部分：</p>
+<h3 id="Header"><a href="#Header" class="headerlink" title="Header"></a>Header</h3><p>Header代表了哪些格式的Header可以使用，例如Ethernet header。</p>
+<p>例如Ethernet定义：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">header_type ethernet_t<span class="punctuation">&#123;</span></span><br><span class="line">	fields<span class="punctuation">&#123;</span></span><br><span class="line">  	dst_addr <span class="punctuation">:</span> <span class="number">48</span>;</span><br><span class="line">  	src_addr <span class="punctuation">:</span> <span class="number">48</span>;</span><br><span class="line">  	ether_type <span class="punctuation">:</span> <span class="number">16</span>;</span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>里面数字都是以bit定义的。</p>
+<p>使用需要实例化：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">header ethernet_t ethernet;</span><br></pre></td></tr></table></figure>
+
+<p>P4-16</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">header EthernetHeader &#123;</span><br><span class="line"></span><br><span class="line">    bit&lt;48&gt; dst;</span><br><span class="line">    bit&lt;48&gt; src;</span><br><span class="line">    bit&lt;16&gt; etherType;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">EthernetHeader ethernetHeader;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="Parser-1"><a href="#Parser-1" class="headerlink" title="Parser"></a>Parser</h3><p>Header之后就要定义Parser，一般都有一个开始的parser：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">parser start<span class="punctuation">&#123;</span></span><br><span class="line">  return next_parser;</span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>在每一个parser中都会依据目前所分析的内容决定下一个parser，直到回传的内容是ingress，或者其他control function，以ipv4为例：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">parser start<span class="punctuation">&#123;</span></span><br><span class="line">  return parser_ethernet;</span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">parser parser_ethernet<span class="punctuation">&#123;</span></span><br><span class="line">  extract(ethernet);</span><br><span class="line">  return select(ethernet.ether_type)<span class="punctuation">&#123;</span></span><br><span class="line">    <span class="number">0x0800</span> <span class="punctuation">:</span> parse_ipv4;</span><br><span class="line">    default <span class="punctuation">:</span> ingress;</span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">parser parser_ipv4<span class="punctuation">&#123;</span></span><br><span class="line">  extract(ipv4);</span><br><span class="line">  return ingress;</span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><p>extract : 将packet以特定的header取出来，取出来的资料长度以header定义的为主。</p>
+</li>
+<li><p>retrun：透过return决定要往哪个parser或者control function，可以select或者return。</p>
+</li>
+<li><p>select(select_exp)：像c中switch-case，依据特定field值，取决定去那个parser。</p>
+</li>
+<li><p>select_exp：依据spec，可以是</p>
+<p>field_ref : 如 ethernet.ether_type</p>
+<p>latest.field_name : 以最後 extract 的 header 為主，取用他的 field</p>
+<p>current (offset, length) : 以目前的 packet offset 位置開始某固定長度所取得的數值</p>
+</li>
+</ol>
+<p>在 egress 階段開始時會先對 packet 做 deparsing 的動作，亦即將 ingress 所做出的修改（add header、modiffy header等）重新封裝回 packet 當中。</p>
+<p><strong>P4-16</strong></p>
+<p>與 1.0&#x2F;1.1 版不同的是，原先的版本需要定義出很多個 parser，並在不同的 parser 間切換，而新版的則是定義一個 parser，並在 parser 中撰寫很多不同的狀態（state），並透過 accept 與 reject 決定 parser 是否成功解析一個封包。</p>
+<p>有限状态机</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">parser ParserName(packet_in pkt<span class="punctuation">,</span> ...) <span class="punctuation">&#123;</span></span><br><span class="line"></span><br><span class="line">    state start <span class="punctuation">&#123;</span></span><br><span class="line">        ....</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">    state state_name <span class="punctuation">&#123;</span></span><br><span class="line">        ....</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>parser 所帶入的參數主要有：</p>
+<ul>
+<li>packet_in：執行期間所要解析的封包</li>
+<li>其他輸出內容：可以是 struct 或是一般封包参照</li>
+</ul>
+<p>不同的 state 切換可以透過 <strong>transition</strong> 這個關鍵字去做切換，而 transition 後面可以接 state 名稱或是 select 語法，我們以 Ethernet + IPv4 為例子。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">parser MyParser(packet_in pkt<span class="punctuation">,</span> out eth<span class="punctuation">,</span> out ipv4) <span class="punctuation">&#123;</span></span><br><span class="line"></span><br><span class="line">    state start <span class="punctuation">&#123;</span></span><br><span class="line">        transition eth;</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">    state eth <span class="punctuation">&#123;</span></span><br><span class="line">        pkt.extract(eth);</span><br><span class="line">        transition select(eth.ethType) <span class="punctuation">&#123;</span></span><br><span class="line">            <span class="number">0x800</span><span class="punctuation">:</span> ip;</span><br><span class="line">            _<span class="punctuation">:</span> reject;</span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">    state ip <span class="punctuation">&#123;</span></span><br><span class="line">        pkt.extract(ipv4);</span><br><span class="line">        transition accept;</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>除了使用 transition, select 以及 extract 以外，Parser 還有提供 verify 語法，透過 verify 檢查，決定 parser 是否要丟出 error 並跳至 reject 狀態，使用方法如下：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">verify(判斷式<span class="punctuation">,</span> 錯誤類別);</span><br></pre></td></tr></table></figure>
+
+<h1 id="Table-Match-Action"><a href="#Table-Match-Action" class="headerlink" title="Table (Match + Action)"></a>Table (Match + Action)</h1><p>简单IPv4转发表的定义可以实现如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">table routing_table &#123;</span><br><span class="line">    key = &#123;</span><br><span class="line">        hdr.ipv4.dstAddr: lpm;</span><br><span class="line">    &#125;</span><br><span class="line">    actions = &#123;</span><br><span class="line">       ipv4_forward;</span><br><span class="line">       drop;</span><br><span class="line">       NoAction;</span><br><span class="line">    &#125;</span><br><span class="line">    default_action = NoAction();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的routing_table读取IPv4目标IP地址，并根据最长前缀匹配算法进行匹配。然后，在符合规则的数据包上，可以执行三个操作：ipv4_forward，drop或NoAction。</p>
+<h1 id="Deparser"><a href="#Deparser" class="headerlink" title="Deparser"></a>Deparser</h1><p>它定义传出数据包的数据包标头顺序。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">control deparser(packet_out packet,</span><br><span class="line">                 in headers hdr) &#123;</span><br><span class="line"></span><br><span class="line">    apply &#123;</span><br><span class="line">        packet.emit(hdr.ethernet);</span><br><span class="line">        packet.emit(hdr.ipv4);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>完整的ipv4转发定义：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* -*- P4_16 -*- */</span></span><br><span class="line">#include &lt;core.p4&gt;</span><br><span class="line">#include &lt;v1model.p4&gt;</span><br><span class="line"></span><br><span class="line">const bit&lt;<span class="number">16</span>&gt; TYPE_IPV4 = <span class="number">0x0800</span>;</span><br><span class="line"></span><br><span class="line">typedef bit&lt;<span class="number">9</span>&gt;  egressSpec_t;</span><br><span class="line">typedef bit&lt;<span class="number">48</span>&gt; macAddr_t;</span><br><span class="line">typedef bit&lt;<span class="number">32</span>&gt; ip4Addr_t;</span><br><span class="line"></span><br><span class="line">header ethernet_t <span class="punctuation">&#123;</span></span><br><span class="line">    macAddr_t dstAddr;</span><br><span class="line">    macAddr_t srcAddr;</span><br><span class="line">    bit&lt;<span class="number">16</span>&gt;   etherType;</span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">header ipv4_t <span class="punctuation">&#123;</span></span><br><span class="line">    bit&lt;<span class="number">4</span>&gt;    version;</span><br><span class="line">    bit&lt;<span class="number">4</span>&gt;    ihl;</span><br><span class="line">    bit&lt;<span class="number">8</span>&gt;    diffserv;</span><br><span class="line">    bit&lt;<span class="number">16</span>&gt;   totalLen;</span><br><span class="line">    bit&lt;<span class="number">16</span>&gt;   identification;</span><br><span class="line">    bit&lt;<span class="number">3</span>&gt;    flags;</span><br><span class="line">    bit&lt;<span class="number">13</span>&gt;   fragOffset;</span><br><span class="line">    bit&lt;<span class="number">8</span>&gt;    ttl;</span><br><span class="line">    bit&lt;<span class="number">8</span>&gt;    protocol;</span><br><span class="line">    bit&lt;<span class="number">16</span>&gt;   hdrChecksum;</span><br><span class="line">    ip4Addr_t srcAddr;</span><br><span class="line">    ip4Addr_t dstAddr;</span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">struct headers <span class="punctuation">&#123;</span></span><br><span class="line">    ethernet_t   ethernet;</span><br><span class="line">    ipv4_t       ipv4;</span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">struct routing_metadata_t <span class="punctuation">&#123;</span></span><br><span class="line">    ip4Addr_t nhop_ipv4;</span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">struct metadata <span class="punctuation">&#123;</span></span><br><span class="line">    routing_metadata_t routing;</span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">parser RouterParser(packet_in packet<span class="punctuation">,</span></span><br><span class="line">                    out headers hdr<span class="punctuation">,</span></span><br><span class="line">                    inout metadata meta<span class="punctuation">,</span></span><br><span class="line">                    inout standard_metadata_t standard_metadata) <span class="punctuation">&#123;</span></span><br><span class="line"></span><br><span class="line">    state start <span class="punctuation">&#123;</span></span><br><span class="line">        transition parse_ethernet;</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">     state parse_ethernet <span class="punctuation">&#123;</span></span><br><span class="line">        packet.extract(hdr.ethernet);</span><br><span class="line">        transition select(hdr.ethernet.etherType) <span class="punctuation">&#123;</span></span><br><span class="line">            TYPE_IPV4<span class="punctuation">:</span> parse_ipv4;</span><br><span class="line">            default<span class="punctuation">:</span> accept;</span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">    state parse_ipv4 <span class="punctuation">&#123;</span></span><br><span class="line">        packet.extract(hdr.ipv4);</span><br><span class="line">        transition accept;</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">action drop() <span class="punctuation">&#123;</span></span><br><span class="line">    mark_to_drop();</span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">control ingress(inout headers hdr<span class="punctuation">,</span></span><br><span class="line">                inout metadata meta<span class="punctuation">,</span></span><br><span class="line">                inout standard_metadata_t standard_metadata) <span class="punctuation">&#123;</span></span><br><span class="line"></span><br><span class="line">    action ipv4_forward(ip4Addr_t nextHop<span class="punctuation">,</span> egressSpec_t port) <span class="punctuation">&#123;</span></span><br><span class="line">        meta.routing.nhop_ipv4 = nextHop;</span><br><span class="line">        standard_metadata.egress_spec = port;</span><br><span class="line">        hdr.ipv4.ttl = hdr.ipv4.ttl - <span class="number">1</span>;</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">    table routing_table <span class="punctuation">&#123;</span></span><br><span class="line">        key = <span class="punctuation">&#123;</span></span><br><span class="line">            hdr.ipv4.dstAddr<span class="punctuation">:</span> lpm;</span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line">        actions = <span class="punctuation">&#123;</span></span><br><span class="line">            ipv4_forward;</span><br><span class="line">            drop;</span><br><span class="line">            NoAction;</span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line">        default_action = NoAction();</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">    apply <span class="punctuation">&#123;</span></span><br><span class="line">        routing_table.apply();</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">control egress(inout headers hdr<span class="punctuation">,</span></span><br><span class="line">               inout metadata meta<span class="punctuation">,</span></span><br><span class="line">               inout standard_metadata_t standard_metadata) <span class="punctuation">&#123;</span></span><br><span class="line"></span><br><span class="line">    action set_dmac(macAddr_t dstAddr) <span class="punctuation">&#123;</span></span><br><span class="line">        hdr.ethernet.dstAddr = dstAddr;</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">    action set_smac(macAddr_t mac) <span class="punctuation">&#123;</span></span><br><span class="line">        hdr.ethernet.srcAddr = mac;</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">    table switching_table <span class="punctuation">&#123;</span></span><br><span class="line">        key = <span class="punctuation">&#123;</span></span><br><span class="line">            meta.routing.nhop_ipv4 <span class="punctuation">:</span> exact;</span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line">        actions = <span class="punctuation">&#123;</span></span><br><span class="line">            set_dmac;</span><br><span class="line">            drop;</span><br><span class="line">            NoAction;</span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line">        default_action = NoAction();</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">    table mac_rewriting_table <span class="punctuation">&#123;</span></span><br><span class="line"></span><br><span class="line">        key = <span class="punctuation">&#123;</span></span><br><span class="line">            standard_metadata.egress_port<span class="punctuation">:</span> exact;</span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">        actions = <span class="punctuation">&#123;</span></span><br><span class="line">            set_smac;</span><br><span class="line">            drop;</span><br><span class="line">            NoAction;</span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">        default_action = drop();</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">    apply <span class="punctuation">&#123;</span></span><br><span class="line">        switching_table.apply();</span><br><span class="line">        mac_rewriting_table.apply();</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">control deparser(packet_out packet<span class="punctuation">,</span></span><br><span class="line">                 in headers hdr) <span class="punctuation">&#123;</span></span><br><span class="line"></span><br><span class="line">    apply <span class="punctuation">&#123;</span></span><br><span class="line">        packet.emit(hdr.ethernet);</span><br><span class="line">        packet.emit(hdr.ipv4);</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">control MyComputeChecksum(inout headers hdr<span class="punctuation">,</span> inout metadata meta) <span class="punctuation">&#123;</span></span><br><span class="line">     apply <span class="punctuation">&#123;</span></span><br><span class="line">	update_checksum(</span><br><span class="line">	    hdr.ipv4.isValid()<span class="punctuation">,</span></span><br><span class="line">            <span class="punctuation">&#123;</span> hdr.ipv4.version<span class="punctuation">,</span></span><br><span class="line">	      hdr.ipv4.ihl<span class="punctuation">,</span></span><br><span class="line">              hdr.ipv4.diffserv<span class="punctuation">,</span></span><br><span class="line">              hdr.ipv4.totalLen<span class="punctuation">,</span></span><br><span class="line">              hdr.ipv4.identification<span class="punctuation">,</span></span><br><span class="line">              hdr.ipv4.flags<span class="punctuation">,</span></span><br><span class="line">              hdr.ipv4.fragOffset<span class="punctuation">,</span></span><br><span class="line">              hdr.ipv4.ttl<span class="punctuation">,</span></span><br><span class="line">              hdr.ipv4.protocol<span class="punctuation">,</span></span><br><span class="line">              hdr.ipv4.srcAddr<span class="punctuation">,</span></span><br><span class="line">              hdr.ipv4.dstAddr <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">            hdr.ipv4.hdrChecksum<span class="punctuation">,</span></span><br><span class="line">            HashAlgorithm.csum16);</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line">control MyVerifyChecksum(inout headers hdr<span class="punctuation">,</span> inout metadata meta) <span class="punctuation">&#123;</span></span><br><span class="line">    apply <span class="punctuation">&#123;</span>  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">V1Switch(</span><br><span class="line">RouterParser()<span class="punctuation">,</span></span><br><span class="line">MyVerifyChecksum()<span class="punctuation">,</span></span><br><span class="line">ingress()<span class="punctuation">,</span></span><br><span class="line">egress()<span class="punctuation">,</span></span><br><span class="line">MyComputeChecksum()<span class="punctuation">,</span></span><br><span class="line">deparser()</span><br><span class="line">) main;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="P4编译的个人理解"><a href="#P4编译的个人理解" class="headerlink" title="P4编译的个人理解"></a>P4编译的个人理解</h1><p>p4-hlir项目解析p4，可以看成p4语言的python解析器，生成对应的python对象。<br>基于这个解析结果可以再加上模板输出json或者c, 或者RTL，或者DPDK，或者NP的微码。。</p>
+<p>BMv2可以看成是一个设备或者模拟器，p4c-bm就是调用p4-hlir解析p4，生成BMv2配置所需的json文件和远程调用接口。所以一个p4模型被mininet模拟的picture是这样的：</p>
+<p>p4 -&gt; p4-hlir -&gt; p4c-bm -&gt; BMv2 -&gt; mininet</p>
+<p>p4c-bm安装会把p4-hlir一并安装：<br>git clone <a target="_blank" rel="noopener" href="https://github.com/p4lang/p4c-bm.git">https://github.com/p4lang/p4c-bm.git</a><br>cd p4c-bm<br>sudo pip install -r requirements_v1_1.txt<br>sudo python setup.py install<br>至此&#x2F;usr&#x2F;local&#x2F;bin下面就有了p4开头的编译、校验、图片生成命令。</p>
+<p>p4-validate用来检查p4语法</p>
+<p>p4-shell simple_router.p4<br>这是python界面，h对象包含了HLIR已经解析出的对象，用法参见<a target="_blank" rel="noopener" href="https://github.com/p4lang/p4-hlir">https://github.com/p4lang/p4-hlir</a></p>
+<p>p4-graph，这个项目不见了，原来跑到这里。这个命令会在当前目录下生成几个图片来描述Table&#x2F;parser关系。</p>
+<p>p4c-bmv2<br>–json 生成P4的Json格式<br>–pd 生成 PD C++ code<br>–p4-v1.1 if your input program is a P4 v1.1 program</p>
+<p>进入p4-factory的targets&#x2F;simple_router&#x2F;p4src，编译一下p4模型:<br>p4c-bmv2 –json JSON simple_router.p4<br>这时候JSON文件就生成了，打开看看是不是很眼熟？</p>
+<ol>
+<li>metadata跟header_type放在一起</li>
+<li>headers成员里面有个metadata:true&#x2F;false来标记</li>
+<li>headers里面还有standard_metadata</li>
+<li>还有parsers&#x2F;actions组。。。</li>
+</ol>
+<p>至于怎么用BMv2或者mininet跑起来请看下一篇</p>
+<p>如果你有自己的设备，CPU&#x2F;FPGA&#x2F;NP或者其它想支持P4的设备，可以用p4-hlir用python解析生成代码，或者基于p4c-bmv2输出的JSON生成代码或者执行文件。</p>
+<p>BMv2j记得不是生成代码，而是加载JSON作为配置，如果代码效率要求不高应该可以这么用。</p>
+<p>BTW，P4这个名字本来是Perforce的缩写，一个版本管理工具，P4全名是Programming Protocol independent Packet Processing, PPiPP更唯一</p>
+<hr>
+<p>为此，P4 语言定义了一套抽象转发模型[10]来支撑上诉三点语言特性。如图1 所示，抽象转发模型包含3 个主要部分。</p>
+<p><img src="https://pic.downk.cc/item/5f562e2c160a154a676360ea.png"></p>
+<ol>
+<li>第一部分是可编程的数据报文头部解析器。开发人员在编写P4 代码时可以自定义报文头部解析流程，灵活解析不同的数据报文格式，经过编译之后产生类似于图2 所示的数据报文头部解析状态转移图，在部署时配置到可编程设备的报文头部解析器上。在数据报文进入可编程设备时数据平面先将报文头部和载荷分离，接着根据解析图的状态转移规则解析并保存报文的头部到对应自定义的头部域中，用于流水线中流表的匹配操作。</li>
+</ol>
+<p><img src="https://pic.downk.cc/item/5f562e4f160a154a676367af.png"></p>
+<ol start="2">
+<li><p>第二部分是可编程的多阶段流水线[10]。从图1 中可以看出主要分为入口流水线和出口流水线，其中，入口流水线主要进行数据分组修改以及决定出端口的操作，随之数据分组进入对应出端口的缓存队列中；而出口流水线仅负责数据分组的修改。开发人员可以自定义每张匹配动作表中的匹配头部域，执行动作及其参数，流表的数量等以及各条流水线中每张匹配动作表的执行顺序。P4 代码经过编译之后会产生一张由匹配动作表组成的有向无环图（DAG），即数据平面控制流。运行时数据平面会依据控制流中匹配动作表的顺序依次匹配处理每个数据报文。</p>
+</li>
+<li><p>第三部分是控制平面上的控制程序。P4 程序会在编译后生成对应的控制接口，主要负责在运行时向设备的数据平面下发并安装具体的流表匹配规则，配置计数器、寄存器等与平台相关的特定对象以及采集其他运行时的状态统计信息。</p>
+</li>
+</ol>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_34039018/article/details/88734481">引用</a></p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>Ian Tang</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://tkhfree.github.io/2020/08/23/P4%E5%85%A5%E9%97%A8/">https://tkhfree.github.io/2020/08/23/P4%E5%85%A5%E9%97%A8/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/P4/"># P4</a>
+                    
+                        <a href="/tags/SDN/"># SDN</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2020/08/27/P4Runtime%E4%BA%86%E8%A7%A3/">P4Runtime了解</a>
+            
+            
+            <a class="next" rel="next" href="/2020/08/12/vscode%E4%BD%BF%E7%94%A8/">vscode使用</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Ian Tang | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
