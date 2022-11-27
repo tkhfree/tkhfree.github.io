@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Ian Tang">
+
+
+    <meta name="subtitle" content="岁月不居时节如流">
+
+
+    <meta name="description" content="好记性不如烂笔头">
+
+
+
+<title>ONOS+mininet | 随笔</title>
+
+
+
+    <link rel="icon" href="/image/The_Lion_King_32_32.png">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Tangkaifei&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Tangkaifei&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    var tocbot_timer;
+    var DEPTH_MAX = 6; // 为 6 时展开所有
+    var tocbot_default_config = {
+        tocSelector: '.tocbot-list',
+        contentSelector: '.post-content',
+        headingSelector: 'h1, h2, h3, h4, h5',
+        orderedList: false,
+        scrollSmooth: true,
+        onClick: extend_click,
+    };
+
+    function extend_click() {
+        clearTimeout(tocbot_timer);
+        tocbot_timer = setTimeout(function() {
+            tocbot.refresh(obj_merge(tocbot_default_config, {
+                hasInnerContainers: true
+            }));
+        }, 420); // 这个值是由 tocbot 源码里定义的 scrollSmoothDuration 得来的
+    }
+
+    document.ready(function() {
+        tocbot.init(obj_merge(tocbot_default_config, {
+            collapseDepth: 1
+        }));
+    });
+
+    function expand_toc() {
+        var b = document.querySelector('.tocbot-toc-expand');
+        var expanded = b.getAttribute('data-expanded');
+        expanded ? b.removeAttribute('data-expanded') : b.setAttribute('data-expanded', true);
+        tocbot.refresh(obj_merge(tocbot_default_config, {
+            collapseDepth: expanded ? 1 : DEPTH_MAX
+        }));
+        b.innerText = expanded ? 'Expand all' : 'Collapse all';
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function obj_merge(target, source) {
+        for (var item in source) {
+            if (source.hasOwnProperty(item)) {
+                target[item] = source[item];
+            }
+        }
+        return target;
+    }
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">ONOS+mininet</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">Ian Tang</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">十一月 27, 2022&nbsp;&nbsp;12:14:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E6%8A%80%E6%9C%AF%EF%BC%9A%E7%9F%A5%E8%AF%86%E6%8A%80%E8%83%BD/">技术：知识技能</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p>根据onos官网的例子使用mininet构建简单的网络拓扑图进行试验</p>
+<p><img src="https://sc03.alicdn.com/kf/H1e0cc92efb194df982b6716e5896f6b1z.jpg"></p>
+<p>虽然使用mininet构建好了网络拓扑，但是h1 ping h2并不能成功，因为onos没有向交换机s1下发流表，也就是no flows installed on the data-plane。没有办法转发数据帧。</p>
+<p>onos里有一个Reactive Forwarding应用程序，该app可以按需安装转发flows，需要激活</p>
+<p><code>onos&gt;apps -a -s</code> </p>
+<p>显示处于活动状态的app</p>
+<p><code>onos&gt; app activate org.onosproject.fwd</code></p>
+<p>激活reactive forwarding&#x2F; 或者在gui启动</p>
+<h2 id="ONOS-CLI命令"><a href="#ONOS-CLI命令" class="headerlink" title="ONOS CLI命令"></a>ONOS CLI命令</h2><h4 id="设备命令"><a href="#设备命令" class="headerlink" title="设备命令"></a>设备命令</h4><p><code>onos&gt;devices</code></p>
+<p>返回系统中已知的设备信息</p>
+<h4 id="链接命令"><a href="#链接命令" class="headerlink" title="链接命令"></a>链接命令</h4><p><code>onos&gt;links</code></p>
+<p>列出onos里的链接</p>
+<h4 id="主机命令"><a href="#主机命令" class="headerlink" title="主机命令"></a>主机命令</h4><p><code>onos&gt;hosts</code></p>
+<p>列出onos里的主机</p>
+<h4 id="流命令"><a href="#流命令" class="headerlink" title="流命令"></a>流命令</h4><p><code>onos&gt;flows</code></p>
+<p>可以观察到在系统中注册的流，可以是以下几种状态：</p>
+<ul>
+<li>PENDING_ADD 流已提交并转发到交换机</li>
+<li>ADDed 流已经加到交换机</li>
+<li>Pending_REMOVE删除流的请求已经提交并转发到交换机</li>
+<li>REMOVED移除规则</li>
+</ul>
+<h4 id="路径命令"><a href="#路径命令" class="headerlink" title="路径命令"></a>路径命令</h4><p><code>onos&gt;path &lt;table&gt;</code></p>
+<p>table都是交换机设备id，可以自动补全，路径命令可以直观的看到任何两个节点之间的最短路径</p>
+<h4 id="意向命令"><a href="#意向命令" class="headerlink" title="意向命令"></a>意向命令</h4><p>intent处于以下几个状态</p>
+<ul>
+<li>submitted提交意图并很快执行</li>
+<li>compiling编译，过渡状态</li>
+<li>installing 安装意图</li>
+<li>installed安装完成</li>
+<li>recompiling重新编译</li>
+<li>withdrawing正在撤销</li>
+<li>withdrawn已经撤销</li>
+<li>failed失败</li>
+</ul>
+<h3 id="Intent实验"><a href="#Intent实验" class="headerlink" title="Intent实验"></a>Intent实验</h3><p>使用Intent代替flow对网络进行编程，Intent会跟踪网络的状态并重新配置自身已满足你的目的。比如说链接断开，意图框架会将你的意图（也就是流）重新路由到替代路径上，如果没有其他路径，则意图会显示failed状态。</p>
+<p>先关闭fwd</p>
+<p><code>onos&gt;app deactivate fwd</code></p>
+<p>加入我们的intent</p>
+<p><code>onos&gt;add-host-intent &lt;tab&gt; &lt;tab&gt;</code></p>
+<p>tab是主机设备id</p>
+<p>可以用intents命令查看安装状态</p>
+<p>再去ping这两个主机就可以看到成功了</p>
+<p>如果断开一些交换机路径</p>
+<p><code>mininet&gt;link s2 s11 down</code></p>
+<p>则onos intent会自动寻找可以建立链接的路径，如果没有则保持在failed状态</p>
+<p>删除intent使用</p>
+<p><code>onos&gt;remove-intent &lt;tab-app&gt; &lt;tab-id&gt;</code></p>
+<p>Tab-app是应用id， tab-id是intent的id，自动补全</p>
+<p><a target="_blank" rel="noopener" href="http://blog.chinaunix.net/uid-31410005-id-5825102.html">参考1</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.kancloud.cn/kubee/onosguide/203183">参考2</a></p>
+<h3 id="下发流表实验"><a href="#下发流表实验" class="headerlink" title="下发流表实验"></a>下发流表实验</h3><h4 id="mininet搭建拓扑网络"><a href="#mininet搭建拓扑网络" class="headerlink" title="mininet搭建拓扑网络"></a>mininet搭建拓扑网络</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo mn --topo single,3 --mac --switch ovsk --controller remote，--ip=172.17.0.5 --port=6653</span><br></pre></td></tr></table></figure>
+
+<p>创建了三个实例主机和交换机以及一个控制器</p>
+<p>可以打开每个主机的终端</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">mininet&gt;</span><span class="language-bash">xterm h1 h2</span></span><br></pre></td></tr></table></figure>
+
+<p>这时候因为流表为空，所以目前ping不通，可以使用dpctl在VMssh终端中手动安装一些流表。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dpctl add-flow </span><br></pre></td></tr></table></figure>
+
+<p>今天把服务器部署好，这周开始学习一下onos以及下发流表的一些东西。</p>
+<p>ML2(model layer 2)是一种允许openstack网络同时利用多种二层网络技术的框架，ML2包括两种驱动类型，类型驱动(Type driver)和机制驱动(Mechanism Driver)分别实现可扩展的网络类型和访问这些网络类型的网络机制集合。类型驱动实现网络类型(GRE、vxlan、vlan)，机制驱动实现网络机制集合(Linux bridge、open vswich、ODL、ONOS)。</p>
+<p><a target="_blank" rel="noopener" href="https://wiki.onosproject.org/">onos的官网</a></p>
+<p>学习onos之前需要先<strong>了解openflow以及用mininet进行演练</strong>，如果做onos开发还需要了解flowvisor和apache karaf。</p>
+<h2 id="openflow"><a href="#openflow" class="headerlink" title="openflow"></a>openflow</h2><p>ONF基金会提出的基于OpenFlow协议的三层网络架构</p>
+<table>
+<thead>
+<tr>
+<th align="center"><strong>应用平面</strong></th>
+<th align="center"></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><strong>控制平面</strong>（SDN）</td>
+<td align="center">管理平面</td>
+</tr>
+<tr>
+<td align="center"><strong>数据平面（转发）</strong></td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<p>在OpenFlow协议中，数据平面被定义为由多级流表（Flow Table）驱动的转发模型</p>
+<p>流表1&gt;&gt;&gt;流表2&gt;&gt;&gt;流表3</p>
+<h3 id="可编程"><a href="#可编程" class="headerlink" title="可编程"></a>可编程</h3><p>北向接口可编程 rest api、java api</p>
+<p>南向接口可编程openflow</p>
+<p><img src="https://pic.downk.cc/item/5ee896022cb53f50feba89df.png"></p>
+<p>数据平面可编程 DPDk、p4</p>
+<p><img src="https://pic.downk.cc/item/5ee896c22cb53f50febb785a.png"></p>
+<h3 id="SDN数据层面"><a href="#SDN数据层面" class="headerlink" title="SDN数据层面"></a>SDN数据层面</h3><p>执行网络控制逻辑：</p>
+<ol>
+<li>解析数据包头</li>
+<li>转发数据包到某些端口</li>
+</ol>
+<p>openflow交换机模型：</p>
+<p>将传统的网络数据平面的各种查找表（mac地址表、路由表）转而用抽象的流表结构表示，而且支持管道流通，将数据转发处理抽象成匹配-动作（match-action）模型</p>
+<h3 id="OpenFlow交换机架构"><a href="#OpenFlow交换机架构" class="headerlink" title="OpenFlow交换机架构"></a>OpenFlow交换机架构</h3><h4 id="端口"><a href="#端口" class="headerlink" title="端口"></a>端口</h4><p>物理端口</p>
+<p>逻辑端口</p>
+<p>保留端口</p>
+<p>安全通道（sw）：负责控制器与交换机之间的交互，通过安全通道与远端控制器进行链接</p>
+<p>流表（hw）：指示交换机如何进行流的处理，每个动作关联一个流表项</p>
+<p>OpenFlow协议：南向接口</p>
+<h4 id="流表"><a href="#流表" class="headerlink" title="流表"></a>流表</h4><p>流是有某些共同特征的数据集合</p>
+<p>一张流表包含一系列的流表项</p>
+<p>流表项</p>
+<ul>
+<li>包头域（匹配域）：涵盖了链路层、网络层、传输层大部分表示</li>
+<li>计数器：统计数据流量相关嘻嘻</li>
+<li>动作表（指令集）：匹配的数据包应该进行的动作</li>
+</ul>
+<p><img src="https://pic.downk.cc/item/5ee8ba742cb53f50fedeaa5e.png"></p>
+<h3 id="Open-vSwitch"><a href="#Open-vSwitch" class="headerlink" title="Open vSwitch"></a>Open vSwitch</h3><p>open vswitch是一个软SDN交换机。借助第三方控制器（onos、ODL）或管理工具实现复杂的转发策略。不连接外部控制器，他自身也可以依靠mac地址学习实现二层数据包转发功能，类似于Linux bridge。</p>
+<p>Open vSwitch的一些概念：</p>
+<ul>
+<li>Bridge代表以太网交换机（switch）</li>
+<li>交换机包含端口（port）：<strong>Normal物理网卡、Internal虚拟网卡、Patch连接不同的bridge、Tunnel隧道类型端口</strong></li>
+<li>一个端口可以有多个接口（Interfaces）</li>
+<li>数据包通过流（flow）转发的</li>
+</ul>
+<p><img src="https://pic.downk.cc/item/5ee8bfaf2cb53f50fee3e699.png"></p>
+<h2 id="南向接口协议"><a href="#南向接口协议" class="headerlink" title="南向接口协议"></a>南向接口协议</h2><p>控制器与交换机之间的通信协议</p>
+<ul>
+<li>向上提供交换机的状态信息，向下下发控制策略、指导转发行为</li>
+<li>实现网络的配置与管理</li>
+<li>实现路径计算</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://www.zhihu.com/question/267926088/answer/382137375"><em><strong>sdn南向接口协议除了openflow，为什么需要netconf和ovsdb？</strong></em></a></p>
+<p><em><strong>3个协议需要都同时存在吗？各协议负责哪些工作？</strong></em></p>
+<p>三个协议同属于南向协议，openflow区别与后两个，openflow主要管理流表，交换机状态，但是不支持配置。后两个同属于配置交换机的协议，两个是竞争关系，同样的还有ofconfig协议，主要区别在于ovsdb只支持虚拟交换机，netconf则可以应用与物理机。</p>
+<p>至于管理交换机和配置交换机的区别，举个具体的例子，如果需要对某个交换机利用queue进行限速处理，那么你需要先在交换机上配置queue，这时候你就需要用到ovsdb或者ofconfig等。当你的交换机上已经有了queue，这时候你需要将对应的流进行入队操作，这时候你需要的就是openflow协议对流进行管理。</p>
+<p>至于是否需要同时存在，个人以为openflow是必不可少的，毕竟是核心协议。至于netconf和ovsdb看具体的业务需要，就算是没有，无非是无法从controller层配置交换机，需要交换机本地配置。</p>
+<h3 id="OpenFlow协议"><a href="#OpenFlow协议" class="headerlink" title="OpenFlow协议"></a>OpenFlow协议</h3><p>安全通道（sw）有三种消息类型：Controller-to-Switch（控制器发起）、asynchronous（交换机发起）、symmetric（控制器或者交换机）</p>
+<p>OpenFlow的消息格式：OpenFlow Header（8字节）和OpenFlow Message</p>
+<p><img src="https://pic.downk.cc/item/5ee990bd359fca8463e33bad.jpg"></p>
+<p>​												OpenFlow协议下的交换机与控制器交互流程</p>
+<h3 id="OF-CONFIG协议"><a href="#OF-CONFIG协议" class="headerlink" title="OF-CONFIG协议"></a>OF-CONFIG协议</h3><p>交换机与控制器进行通讯前，需要对其功能、特性以及资源进行配置。</p>
+<p>需要专门的配置协议进行配置，与OpenFlow是伴侣协议</p>
+<h3 id="NETCONFIG协议"><a href="#NETCONFIG协议" class="headerlink" title="NETCONFIG协议"></a>NETCONFIG协议</h3><p>也是常用的南向接口之一</p>
+<h2 id="控制平面"><a href="#控制平面" class="headerlink" title="控制平面"></a>控制平面</h2><p>一个或者多个SDN控制器</p>
+<p>SDN控制器体系架构：</p>
+<ul>
+<li><input disabled="" type="checkbox"> 北向接口层</li>
+<li><input disabled="" type="checkbox"> 内置应用层</li>
+<li><input disabled="" type="checkbox"> 基础网络层                ——配置管理层</li>
+<li><input disabled="" type="checkbox"> 抽象逻辑层</li>
+<li><input disabled="" type="checkbox"> 南向接口层</li>
+</ul>
+<p>开源SDN控制器：python语言的Ryu、POX；java语言的ODL、ONOS</p>
+<h2 id="北向接口"><a href="#北向接口" class="headerlink" title="北向接口"></a>北向接口</h2><p>例如Floodlight北向API：RESTful API</p>
+<ul>
+<li><p>流表OpenFlow</p>
+</li>
+<li><p>防火墙</p>
+</li>
+<li><p>ACL</p>
+</li>
+<li><p>多租户网络虚拟化</p>
+</li>
+</ul>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>Ian Tang</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://tkhfree.github.io/2022/11/27/ONOS+mininet-2022-11-27/">https://tkhfree.github.io/2022/11/27/ONOS+mininet-2022-11-27/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/ONOS/"># ONOS</a>
+                    
+                        <a href="/tags/network/"># network</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2022/11/27/P4%E8%AF%AD%E8%A8%80%E5%85%A5%E9%97%A8-2022-11-27/">SDN架构与P4语言入门</a>
+            
+            
+            <a class="next" rel="next" href="/2022/11/27/mariadb%E6%95%B0%E6%8D%AE%E5%BA%93%E9%87%8Cmysql.sock%E7%9A%84%E4%BD%9C%E7%94%A8-2022-11-27/">mariadb数据库里mysql.sock的作用</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Ian Tang | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>

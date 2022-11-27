@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Ian Tang">
+
+
+    <meta name="subtitle" content="岁月不居时节如流">
+
+
+    <meta name="description" content="好记性不如烂笔头">
+
+
+
+<title>Git使用总结 | 随笔</title>
+
+
+
+    <link rel="icon" href="/image/The_Lion_King_32_32.png">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Tangkaifei&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Tangkaifei&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    var tocbot_timer;
+    var DEPTH_MAX = 6; // 为 6 时展开所有
+    var tocbot_default_config = {
+        tocSelector: '.tocbot-list',
+        contentSelector: '.post-content',
+        headingSelector: 'h1, h2, h3, h4, h5',
+        orderedList: false,
+        scrollSmooth: true,
+        onClick: extend_click,
+    };
+
+    function extend_click() {
+        clearTimeout(tocbot_timer);
+        tocbot_timer = setTimeout(function() {
+            tocbot.refresh(obj_merge(tocbot_default_config, {
+                hasInnerContainers: true
+            }));
+        }, 420); // 这个值是由 tocbot 源码里定义的 scrollSmoothDuration 得来的
+    }
+
+    document.ready(function() {
+        tocbot.init(obj_merge(tocbot_default_config, {
+            collapseDepth: 1
+        }));
+    });
+
+    function expand_toc() {
+        var b = document.querySelector('.tocbot-toc-expand');
+        var expanded = b.getAttribute('data-expanded');
+        expanded ? b.removeAttribute('data-expanded') : b.setAttribute('data-expanded', true);
+        tocbot.refresh(obj_merge(tocbot_default_config, {
+            collapseDepth: expanded ? 1 : DEPTH_MAX
+        }));
+        b.innerText = expanded ? 'Expand all' : 'Collapse all';
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function obj_merge(target, source) {
+        for (var item in source) {
+            if (source.hasOwnProperty(item)) {
+                target[item] = source[item];
+            }
+        }
+        return target;
+    }
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Git使用总结</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">Ian Tang</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">十一月 27, 2022&nbsp;&nbsp;12:05:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E6%96%B9%E6%B3%95%EF%BC%9A%E6%96%B9%E6%B3%95%E8%AE%BA%EF%BC%88%E7%BB%8F%E9%AA%8C%E8%B0%88%EF%BC%89/">方法：方法论（经验谈）</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p>45 个 Git 经典操作场景，专治不会合代码 - 老炮说Java的文章 - 知乎 <a href="">https://zhuanlan.zhihu.com/p/485010145</a></p>
+<p><img src="https://pic.imgdb.cn/item/62e0eb2cf54cd3f93762ae3b.jpg"></p>
+<p>创建版本库</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir learngit</span><br><span class="line">cd learngit</span><br></pre></td></tr></table></figure>
+
+<h1 id="初始化一个Git仓库"><a href="#初始化一个Git仓库" class="headerlink" title="初始化一个Git仓库"></a>初始化一个Git仓库</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git init</span><br></pre></td></tr></table></figure>
+
+<h1 id="添加文件到Git仓库，分两步："><a href="#添加文件到Git仓库，分两步：" class="headerlink" title="添加文件到Git仓库，分两步："></a>添加文件到Git仓库，分两步：</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git init</span><br><span class="line">git add &lt;filename&gt;</span><br><span class="line">git commit -m &lt;message&gt;</span><br></pre></td></tr></table></figure>
+<p>使用命令git add <file>，注意，可反复多次使用，添加多个文件；<br>使用命令git commit -m <message>，完成。<br>参考<br><a target="_blank" rel="noopener" href="https://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000/0013743256916071d599b3aed534aaab22a0db6c4e07fd0000">创建仓库&#x2F;添加文件&#x2F;提交</a></p>
+<h1 id="查看哪些文件修改"><a href="#查看哪些文件修改" class="headerlink" title="查看哪些文件修改"></a>查看哪些文件修改</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git status</span><br></pre></td></tr></table></figure>
+<h1 id="查看修改的内容"><a href="#查看修改的内容" class="headerlink" title="查看修改的内容"></a>查看修改的内容</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git diff httpserver.js</span><br></pre></td></tr></table></figure>
+
+<h1 id="查看提交日志"><a href="#查看提交日志" class="headerlink" title="查看提交日志"></a>查看提交日志</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git log</span><br></pre></td></tr></table></figure>
+<h1 id="返回上一个版本"><a href="#返回上一个版本" class="headerlink" title="返回上一个版本"></a>返回上一个版本</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git reset  --hard HEAD~1</span><br></pre></td></tr></table></figure>
+<h1 id="工作区、版本库、暂存区"><a href="#工作区、版本库、暂存区" class="headerlink" title="工作区、版本库、暂存区"></a>工作区、版本库、暂存区</h1><p><img src="http://localhost:9001/api/file/getImage?fileId=5b71273016454611ab000013"></p>
+<h1 id="放弃工作区的修改"><a href="#放弃工作区的修改" class="headerlink" title="放弃工作区的修改"></a>放弃工作区的修改</h1><p>将工作区的修改撤销为“git commit”或者“git add”时候的状态<br>例如加入“I like men”</p>
+<ul>
+<li>未“git add”，则撤销后为原状态</li>
+<li>已“git add”，则撤销后为 I like men 状态</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git checkout -- httpserver.js</span><br></pre></td></tr></table></figure>
+<p>–代表master支线</p>
+<h1 id="放弃暂存区修改"><a href="#放弃暂存区修改" class="headerlink" title="放弃暂存区修改"></a>放弃暂存区修改</h1><p>已经“git add”加入暂存区了，只能用“git reset HEAD”去撤销修改</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git reset HEAD httpserver.js</span><br></pre></td></tr></table></figure>
+<p>然后撤销工作区修改</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git checkout -- httpserver.js</span><br></pre></td></tr></table></figure>
+<p>如果已经“git commit”，那么“返回上一个版本”</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git reset --hard HEAD~1</span><br></pre></td></tr></table></figure>
+<h1 id="删除工作区文件"><a href="#删除工作区文件" class="headerlink" title="删除工作区文件"></a>删除工作区文件</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rm httpserver.js</span><br></pre></td></tr></table></figure>
+<h1 id="删除暂存区文件"><a href="#删除暂存区文件" class="headerlink" title="删除暂存区文件"></a>删除暂存区文件</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rm httpserver.js</span><br></pre></td></tr></table></figure>
+<h1 id="删除master分支文件"><a href="#删除master分支文件" class="headerlink" title="删除master分支文件"></a>删除master分支文件</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git rm httpserver.js</span><br><span class="line">git commit -m &quot;delete it&quot;</span><br></pre></td></tr></table></figure>
+<h1 id="跟远程仓库连接"><a href="#跟远程仓库连接" class="headerlink" title="跟远程仓库连接"></a>跟远程仓库连接</h1><p>第1步：创建SSH Key。在用户主目录下，看看有没有.ssh目录，如果有，再看看这个目录下有没有id_rsa和id_rsa.pub这两个文件，如果已经有了，可直接跳到下一步。如果没有，打开Shell（Windows下打开Git Bash），创建SSH Key：</p>
+<p>$ ssh-keygen -t rsa -C “<a href="mailto:&#121;&#x6f;&#x75;&#114;&#x65;&#109;&#97;&#105;&#x6c;&#64;&#x65;&#120;&#97;&#109;&#x70;&#x6c;&#101;&#x2e;&#99;&#x6f;&#x6d;">&#121;&#x6f;&#x75;&#114;&#x65;&#109;&#97;&#105;&#x6c;&#64;&#x65;&#120;&#97;&#109;&#x70;&#x6c;&#101;&#x2e;&#99;&#x6f;&#x6d;</a>“<br>你需要把邮件地址换成你自己的邮件地址，然后一路回车，使用默认值即可，由于这个Key也不是用于军事目的，所以也无需设置密码。</p>
+<p>如果一切顺利的话，可以在用户主目录里找到.ssh目录，里面有id_rsa和id_rsa.pub两个文件，这两个就是SSH Key的秘钥对，id_rsa是私钥，不能泄露出去，id_rsa.pub是公钥，可以放心地告诉任何人。</p>
+<p>第2步：登陆GitHub，打开“Account settings”，“SSH Keys”页面：</p>
+<p>然后，点“Add SSH Key”，填上任意Title，在Key文本框里粘贴id_rsa.pub文件的内容<br>为什么GitHub需要SSH Key呢？因为GitHub需要识别出你推送的提交确实是你推送的，而不是别人冒充的，而Git支持SSH协议，所以，GitHub只要知道了你的公钥，就可以确认只有你自己才能推送。</p>
+<p>当然，GitHub允许你添加多个Key。假定你有若干电脑，你一会儿在公司提交，一会儿在家里提交，只要把每台电脑的Key都添加到GitHub，就可以在每台电脑上往GitHub推送了。</p>
+<p>最后友情提示，在GitHub上免费托管的Git仓库，任何人都可以看到喔（但只有你自己才能改）。所以，不要把敏感信息放进去。</p>
+<p>如果你不想让别人看到Git库，有两个办法，一个是交点保护费，让GitHub把公开的仓库变成私有的，这样别人就看不见了（不可读更不可写）。另一个办法是自己动手，搭一个Git服务器，因为是你自己的Git服务器，所以别人也是看不见的。这个方法我们后面会讲到的，相当简单，公司内部开发必备。</p>
+<p>确保你拥有一个GitHub账号后，我们就即将开始远程仓库的学习。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git remote add origin git@github.com：tkhfree/learn_git.git</span><br></pre></td></tr></table></figure>
+
+<h1 id="推送本地仓库到远程仓库"><a href="#推送本地仓库到远程仓库" class="headerlink" title="推送本地仓库到远程仓库"></a>推送本地仓库到远程仓库</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git remote add origin git@github.com：tkhfree/learn_git.git</span><br><span class="line">git push -u origin master</span><br></pre></td></tr></table></figure>
+<h1 id="从远程仓库克隆到本地仓库"><a href="#从远程仓库克隆到本地仓库" class="headerlink" title="从远程仓库克隆到本地仓库"></a>从远程仓库克隆到本地仓库</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone git@github.com:tkhfree/learn_git.git</span><br></pre></td></tr></table></figure>
+
+<h1 id="创建并切换分支"><a href="#创建并切换分支" class="headerlink" title="创建并切换分支"></a>创建并切换分支</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git checkout -b dev</span><br></pre></td></tr></table></figure>
+<p>等于</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git branch dev</span><br><span class="line">git checkout dev</span><br></pre></td></tr></table></figure>
+<h1 id="查看当前分支"><a href="#查看当前分支" class="headerlink" title="查看当前分支"></a>查看当前分支</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git branch</span><br></pre></td></tr></table></figure>
+<h1 id="分支合并"><a href="#分支合并" class="headerlink" title="分支合并"></a>分支合并</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git merge dev</span><br></pre></td></tr></table></figure>
+<h1 id="删除分支"><a href="#删除分支" class="headerlink" title="删除分支"></a>删除分支</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git branch -d dev</span><br></pre></td></tr></table></figure>
+<h1 id="bug分支"><a href="#bug分支" class="headerlink" title="bug分支"></a>bug分支</h1><p> Git还提供了一个stash功能，可以把当前工作现场“储藏”起来，等以后恢复现场后继续工作</p>
+<p>工作区和暂存区是一个公开的工作台，任何分支都会用到，并能看到工作台上最新的内容，只要在工作区、暂存区的改动未能够提交到某一个版本库（分支）中，那么在任何一个分支下都可以看得到这个工作区、暂存区的最新实时改动。<br>使用git stash就可以将暂存区的修改藏匿起来，使整个工作台看起来都是干净的。所以要清理整个工作台，那么前提是必须先将工作区的内容都add到暂存区中去。之后在干净的工作台上可以做另外一件紧急事件与藏匿起来的内容是完全独立的</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git stash</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git stash list</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git stash pop</span><br></pre></td></tr></table></figure>
+<h2 id="为什么要用git-stash。"><a href="#为什么要用git-stash。" class="headerlink" title="为什么要用git stash。"></a><strong>为什么要用git stash。</strong></h2><p>1、在dev分支，创建一个新文件test6.txt。并add它，让它stage。<br>2、这时切回master分支，你会看到这个test6.txt居然也在master分支里。但它实际上是属于dev分支的。怎么办？<br>3、git stash就有作用了。切回dev分支，执行git stach。这时git bash会告诉你<br>“Saved working directory and index state WIP on newF2: b63fbcb add test6.txt<br>HEAD is now at b63fbcb add test6.txt”。它已经把test6.txt的现场保存好了。<br>4、这时你在切回master分支，test6.txt就消失了。</p>
+<h1 id="查看远程仓库的信息"><a href="#查看远程仓库的信息" class="headerlink" title="查看远程仓库的信息"></a>查看远程仓库的信息</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git remote -v</span><br></pre></td></tr></table></figure>
+<h1 id="从本地仓库任一分支推送到远程仓库"><a href="#从本地仓库任一分支推送到远程仓库" class="headerlink" title="从本地仓库任一分支推送到远程仓库"></a>从本地仓库任一分支推送到远程仓库</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git push origin master</span><br><span class="line">git push origin dev</span><br></pre></td></tr></table></figure>
+<h1 id="从远程仓库分支推送到本地创建新分支"><a href="#从远程仓库分支推送到本地创建新分支" class="headerlink" title="从远程仓库分支推送到本地创建新分支"></a>从远程仓库分支推送到本地创建新分支</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git checkout -b dev origin/dev</span><br></pre></td></tr></table></figure>
+<h1 id="协同工作提交分支至远程仓库"><a href="#协同工作提交分支至远程仓库" class="headerlink" title="协同工作提交分支至远程仓库"></a>协同工作提交分支至远程仓库</h1><p>当你提交的和另一个人提交的有冲突，则需要先pull下来，在本地合并，再push上远程仓库</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git branch --set-upstream-to=origin/dev dev</span><br><span class="line">git pull</span><br><span class="line">git push origin dev</span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>因此，多人协作的工作模式通常是这样：</p>
+<p>首先，可以试图用git push origin <branch-name>推送自己的修改；</p>
+<p>如果推送失败，则因为远程分支比你的本地更新，需要先用git pull试图合并；</p>
+<p>如果合并有冲突，则解决冲突，并在本地提交；</p>
+<p>没有冲突或者解决掉冲突后，再用git push origin <branch-name>推送就能成功！</p>
+<p>如果git pull提示no tracking information，则说明本地分支和远程分支的链接关系没有创建，用命令git branch –set-upstream-to <branch-name> origin&#x2F;<branch-name>。</p>
+<hr>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>Ian Tang</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://tkhfree.github.io/2022/11/27/Git%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93-2022-11-27/">https://tkhfree.github.io/2022/11/27/Git%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93-2022-11-27/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Git/"># Git</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2022/11/27/openstack%E7%9A%84keystone%E6%A8%A1%E5%9D%97-2022-11-27/">openstack的keystone模块介绍</a>
+            
+            
+            <a class="next" rel="next" href="/2022/11/27/bazel%E4%BB%8B%E7%BB%8D-2022-11-27/">bazel介绍</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Ian Tang | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>

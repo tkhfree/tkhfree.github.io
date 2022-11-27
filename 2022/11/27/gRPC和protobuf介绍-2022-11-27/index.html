@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Ian Tang">
+
+
+    <meta name="subtitle" content="岁月不居时节如流">
+
+
+    <meta name="description" content="好记性不如烂笔头">
+
+
+
+<title>gRPC和protobuf介绍 | 随笔</title>
+
+
+
+    <link rel="icon" href="/image/The_Lion_King_32_32.png">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Tangkaifei&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Tangkaifei&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    var tocbot_timer;
+    var DEPTH_MAX = 6; // 为 6 时展开所有
+    var tocbot_default_config = {
+        tocSelector: '.tocbot-list',
+        contentSelector: '.post-content',
+        headingSelector: 'h1, h2, h3, h4, h5',
+        orderedList: false,
+        scrollSmooth: true,
+        onClick: extend_click,
+    };
+
+    function extend_click() {
+        clearTimeout(tocbot_timer);
+        tocbot_timer = setTimeout(function() {
+            tocbot.refresh(obj_merge(tocbot_default_config, {
+                hasInnerContainers: true
+            }));
+        }, 420); // 这个值是由 tocbot 源码里定义的 scrollSmoothDuration 得来的
+    }
+
+    document.ready(function() {
+        tocbot.init(obj_merge(tocbot_default_config, {
+            collapseDepth: 1
+        }));
+    });
+
+    function expand_toc() {
+        var b = document.querySelector('.tocbot-toc-expand');
+        var expanded = b.getAttribute('data-expanded');
+        expanded ? b.removeAttribute('data-expanded') : b.setAttribute('data-expanded', true);
+        tocbot.refresh(obj_merge(tocbot_default_config, {
+            collapseDepth: expanded ? 1 : DEPTH_MAX
+        }));
+        b.innerText = expanded ? 'Expand all' : 'Collapse all';
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function obj_merge(target, source) {
+        for (var item in source) {
+            if (source.hasOwnProperty(item)) {
+                target[item] = source[item];
+            }
+        }
+        return target;
+    }
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">gRPC和protobuf介绍</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">Ian Tang</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">十一月 27, 2022&nbsp;&nbsp;12:36:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E5%BA%94%E7%94%A8%EF%BC%9A%E5%BA%94%E7%94%A8%E7%AC%94%E8%AE%B0/">应用：应用笔记</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="Protocol-Buffer"><a href="#Protocol-Buffer" class="headerlink" title="Protocol Buffer"></a>Protocol Buffer</h1><p>是一种序列化成二进制的数据缓冲编码协议</p>
+<h3 id="定义消息类型"><a href="#定义消息类型" class="headerlink" title="定义消息类型"></a>定义消息类型</h3><figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">syntax = <span class="string">&quot;proto3&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">message </span><span class="title class_">SearchRequest</span>&#123;</span><br><span class="line">	String query = <span class="number">1</span>;</span><br><span class="line">	<span class="type">int32</span> page_num = <span class="number">2</span>;</span><br><span class="line">	<span class="type">int32</span> result_per_page = <span class="number">3</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//分配字段类型、字段编号</span></span><br><span class="line"><span class="comment">//消息字段主要由两个规则：singular0次或者1次、repeated重复任意次，默认是repeated</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">message </span><span class="title class_">SearchResponse</span>&#123;</span><br><span class="line">	<span class="type">string</span> result = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//可以保留字段，如果直接删除字段，以后用户在对消息类型进行更新时可能会重复使用删除掉的字段号，如果再次加载旧版本就会造成冲突</span></span><br><span class="line"><span class="keyword">message </span><span class="title class_">foo</span>&#123;</span><br><span class="line">	reserved <span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span> to <span class="number">9</span>;</span><br><span class="line">	reserved <span class="string">&quot;query&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如何使用.proto文件</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">protoc <span class="literal">--proto_path</span>=IMPORT_PATH <span class="literal">--cpp_out</span>=DST_DIR <span class="literal">--java_out</span>=DST_DIR <span class="literal">--python_out</span>=DST_DIR <span class="literal">--go_out</span>=DST_DIR <span class="literal">--ruby_out</span>=DST_DIR <span class="literal">--objc_out</span>=DST_DIR <span class="literal">--csharp_out</span>=DST_DIR path/to/file.proto</span><br></pre></td></tr></table></figure>
+
+<p>使用protoc编译proto文件，将会以选择的语言输出代码，代码内容主要是根据你编写的message类型获取和设置字段，序列化输出以及解析序列化的输入。</p>
+<ul>
+<li>For <strong>C++</strong>, the compiler generates a <code>.h</code> and <code>.cc</code> file from each <code>.proto</code>, with a class for each message type described in your file.</li>
+<li>For <strong>Java</strong>, the compiler generates a <code>.java</code> file with a class for each message type, as well as a special <code>Builder</code> classes for creating message class instances.</li>
+<li><strong>Python</strong> is a little different – the Python compiler generates a module with a static descriptor of each message type in your <code>.proto</code>, which is then used with a <em>metaclass</em> to create the necessary Python data access class at runtime.</li>
+<li>For <strong>Go</strong>, the compiler generates a <code>.pb.go</code> file with a type for each message type in your file.</li>
+<li>For <strong>Ruby</strong>, the compiler generates a <code>.rb</code> file with a Ruby module containing your message types.</li>
+<li>For <strong>Objective-C</strong>, the compiler generates a <code>pbobjc.h</code> and <code>pbobjc.m</code> file from each <code>.proto</code>, with a class for each message type described in your file.</li>
+<li>For <strong>C#</strong>, the compiler generates a <code>.cs</code> file from each <code>.proto</code>, with a class for each message type described in your file.</li>
+<li>For <strong>Dart</strong>, the compiler generates a <code>.pb.dart</code> file with a class for each message type in your file.</li>
+</ul>
+<h3 id="枚举"><a href="#枚举" class="headerlink" title="枚举"></a>枚举</h3><figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">message </span><span class="title class_">SearchRequest</span>&#123;</span><br><span class="line">	<span class="type">string</span> query = <span class="number">1</span>;</span><br><span class="line">	<span class="keyword">enum </span><span class="title class_">Corpus</span>&#123;</span><br><span class="line">		UNIBERSAL = <span class="number">0</span>; <span class="comment">//第一个值必须为0</span></span><br><span class="line">		WEB = <span class="number">1</span>;</span><br><span class="line">		IMAGEs = <span class="number">2</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	Corpus corpus = <span class="number">2</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也可以使用别名，将<code>allow_alias</code>选项设置为<code>true</code></p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">message </span><span class="title class_">MyMessage1</span>&#123;</span><br><span class="line">	<span class="keyword">enum </span><span class="title class_">Enum1</span>&#123;</span><br><span class="line">		<span class="keyword">option</span> allow_alias = <span class="literal">true</span>;</span><br><span class="line">		UNKnow = <span class="number">0</span>;</span><br><span class="line">		STATUS = <span class="number">1</span>;</span><br><span class="line">		RUNNING = <span class="number">1</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="使用其他消息类型"><a href="#使用其他消息类型" class="headerlink" title="使用其他消息类型"></a>使用其他消息类型</h3><figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">message </span><span class="title class_">SearchRequest</span>&#123;</span><br><span class="line">	<span class="keyword">repeated</span> Result result = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">message </span><span class="title class_">Result</span>&#123;</span><br><span class="line">	<span class="type">string</span> url = <span class="number">1</span>;</span><br><span class="line">	<span class="type">string</span> title = <span class="number">2</span>;</span><br><span class="line">	<span class="keyword">repeated</span> <span class="type">string</span> snippet = <span class="number">3</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果没有定义在同一个.proto文件里，则可以导入</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;myproject/anotherproto.proto&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="嵌套消息类型"><a href="#嵌套消息类型" class="headerlink" title="嵌套消息类型"></a>嵌套消息类型</h3><figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">message </span><span class="title class_">SearchResponse</span>&#123;</span><br><span class="line">	<span class="keyword">message </span><span class="title class_">Result</span>&#123;</span><br><span class="line">		<span class="type">string</span> url = <span class="number">1</span>;</span><br><span class="line">		<span class="type">string</span> title = <span class="number">2</span>;</span><br><span class="line">		<span class="keyword">repeated</span> <span class="type">string</span> snippets = <span class="number">3</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">repeated</span> Result results = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在另一个message里使用Result可以</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">message </span><span class="title class_">OtherMessage</span>&#123;</span><br><span class="line">	SearchResponse.Result results = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="更新消息类型"><a href="#更新消息类型" class="headerlink" title="更新消息类型"></a>更新消息类型</h3><ul>
+<li>不要更改现有的字段的编号，不适用的使用reserve保留字段。</li>
+<li>添加了新的字段也可以使用新生成的代码来解析使用“旧”消息格式通过代码序列话的任何消息。同样，旧的代码也可以解析新代码创建的消息，旧的在解析时只会忽略新字段。</li>
+</ul>
+<h3 id="Any消息类型"><a href="#Any消息类型" class="headerlink" title="Any消息类型"></a>Any消息类型</h3><figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;google/protobuf/any.proto</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">message Errorstatus&#123;</span></span><br><span class="line"><span class="string">	string message = 1;</span></span><br><span class="line"><span class="string">	repeat google.protobuf.Any details = 2;</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Oneof消息类型"><a href="#Oneof消息类型" class="headerlink" title="Oneof消息类型"></a>Oneof消息类型</h3><p>类似于case，当消息包含多个字段但是最多设置一个字段</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">message </span><span class="title class_">SampleMessage</span>&#123;</span><br><span class="line">	<span class="keyword">oneof</span> test_oneof&#123;</span><br><span class="line">		<span class="type">string</span> name = <span class="number">1</span>;</span><br><span class="line">		SubMessage sub_message = <span class="number">9</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Maps"><a href="#Maps" class="headerlink" title="Maps"></a>Maps</h3><p>protocol buffers定义了一种关联映射</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">map&lt;key_type, value_type&gt; map_field = N;</span><br></pre></td></tr></table></figure>
+
+<p>key_type可以是integral和string类型，enum不能作为key，vaue_type可以是任何除了map的类型。</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">map&lt;<span class="type">string</span>, Project&gt; projects = <span class="number">3</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>map不能设置repeated字段</li>
+<li>映射顺序是未定义的</li>
+<li>从.proto文件生成的代码，映射是按照key值排列</li>
+<li>不允许有重复的key值</li>
+<li>当value值为空时，序列化后的值依据编译的语言而定</li>
+</ul>
+<h4 id="向后兼容"><a href="#向后兼容" class="headerlink" title="向后兼容"></a>向后兼容</h4><figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">message </span><span class="title class_">MapFieldEntry</span> &#123;</span><br><span class="line">  key_type key = <span class="number">1</span>;</span><br><span class="line">  value_type value = <span class="number">2</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">repeated</span> MapFieldEntry map_field = N;</span><br></pre></td></tr></table></figure>
+
+<h3 id="package"><a href="#package" class="headerlink" title="package"></a>package</h3><p>加上包声明，可以在不同的包定义相同的消息类型</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> foo.bar;</span><br><span class="line"><span class="keyword">message </span><span class="title class_">Open</span>&#123;</span><br><span class="line">	<span class="type">string</span> name = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//就可以使用完整名称引用</span></span><br><span class="line"><span class="keyword">message </span><span class="title class_">Foo</span>&#123;</span><br><span class="line">	foo.bar.Open open = <span class="number">1</span>; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>In <strong>C++</strong> the generated classes are wrapped inside a C++ namespace. For example, <code>Open</code> would be in the namespace <code>foo::bar</code>.</li>
+<li>In <strong>Java</strong>, the package is used as the Java package, unless you explicitly provide an <code>option java_package</code> in your <code>.proto</code> file.</li>
+<li>In <strong>Python</strong>, the package directive is ignored, since Python modules are organized according to their location in the file system.</li>
+<li>In <strong>Go</strong>, the package is used as the Go package name, unless you explicitly provide an <code>option go_package</code> in your <code>.proto</code> file.</li>
+<li>In <strong>Ruby</strong>, the generated classes are wrapped inside nested Ruby namespaces, converted to the required Ruby capitalization style (first letter capitalized; if the first character is not a letter, <code>PB_</code> is prepended). For example, <code>Open</code> would be in the namespace <code>Foo::Bar</code>.</li>
+<li>In <strong>C#</strong> the package is used as the namespace after converting to PascalCase, unless you explicitly provide an <code>option csharp_namespace</code> in your <code>.proto</code> file. For example, <code>Open</code> would be in the namespace <code>Foo.Bar</code>.</li>
+</ul>
+<h3 id="Defining-Services"><a href="#Defining-Services" class="headerlink" title="Defining Services"></a>Defining Services</h3><p>如果想在RPC里调用消息类型，需要定义服务接口，编译器编译的时候就会产生service interface 和stubs</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">service </span><span class="title class_">ServiceRPC</span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">rpc</span> Search(SearchRequest) <span class="keyword">returns</span> (SearchResponse)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>gRPC与protocol buffers都是谷歌开发的系统，因此可以使用一个gRPC编译器直接产生一个RPC调用代码。</p>
+<h3 id="JSON-Mapping"><a href="#JSON-Mapping" class="headerlink" title="JSON Mapping"></a>JSON Mapping</h3><p>Proto3支持JSON编码</p>
+<h1 id="protocol-buffer-tutorials-for-python"><a href="#protocol-buffer-tutorials-for-python" class="headerlink" title="protocol buffer tutorials for python"></a>protocol buffer tutorials for python</h1><p>对于serialize和retrieve数据来说</p>
+<ul>
+<li>python有内置的picking方法，但是不够方便，与其他语言进行共享也不够完善</li>
+<li>自己设计一种编码方式</li>
+<li>使用XML，使用方便，应用广泛，但是XML需要巨大的性能消耗</li>
+</ul>
+<p>使用Protocol buffers定义数据结构，然后使用编译器自动产生类，这个类依据有效的二进制格式实现.proto文件进行编码和解析（encoding and parser）。这个类提供getters和setters，并负责将.proto文件作为一个单元进行读写的细节操作，因此我们只需要关心暴露出来的接口。</p>
+<h3 id="写-proto文件"><a href="#写-proto文件" class="headerlink" title="写.proto文件"></a>写.proto文件</h3><figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">syntax = <span class="string">&quot;proto2&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> tutorial;</span><br><span class="line"></span><br><span class="line"><span class="keyword">message </span><span class="title class_">Person</span> &#123;</span><br><span class="line">  <span class="keyword">required</span> <span class="type">string</span> name = <span class="number">1</span>;</span><br><span class="line">  <span class="keyword">required</span> <span class="type">int32</span> id = <span class="number">2</span>;</span><br><span class="line">  <span class="keyword">optional</span> <span class="type">string</span> email = <span class="number">3</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">enum </span><span class="title class_">PhoneType</span> &#123;</span><br><span class="line">    MOBILE = <span class="number">0</span>;</span><br><span class="line">    HOME = <span class="number">1</span>;</span><br><span class="line">    WORK = <span class="number">2</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">message </span><span class="title class_">PhoneNumber</span> &#123;</span><br><span class="line">    <span class="keyword">required</span> <span class="type">string</span> number = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">optional</span> PhoneType type = <span class="number">2</span> [default = HOME];</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">repeated</span> PhoneNumber phones = <span class="number">4</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">message </span><span class="title class_">AddressBook</span> &#123;</span><br><span class="line">  <span class="keyword">repeated</span> Person people = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">protoc -I=$SRC_DIR --python_out=$DST_DIR $SRC_DIR/addressbook.proto</span><br></pre></td></tr></table></figure>
+
+<h3 id="The-Protocol-Buffer-API"><a href="#The-Protocol-Buffer-API" class="headerlink" title="The Protocol Buffer API"></a>The Protocol Buffer API</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> addressbook_pb2</span><br><span class="line">person = addressbook_pb2.Person()</span><br><span class="line">person.<span class="built_in">id</span> = <span class="number">1234</span></span><br><span class="line">person.name = <span class="string">&quot;John Doe&quot;</span></span><br><span class="line">person.email = <span class="string">&quot;jdoe@example.com&quot;</span></span><br><span class="line">phone = person.phones.add()</span><br><span class="line">phone.number = <span class="string">&quot;555-4321&quot;</span></span><br><span class="line">phone.<span class="built_in">type</span> = addressbook_pb2.Person.HOME</span><br></pre></td></tr></table></figure>
+
+<h4 id="枚举-1"><a href="#枚举-1" class="headerlink" title="枚举"></a>枚举</h4><p>枚举的被扩展成一组常量</p>
+<h4 id="标准消息方法"><a href="#标准消息方法" class="headerlink" title="标准消息方法"></a>标准消息方法</h4><p>每个消息类还包含许多其他方法，可用于检查或操作整个消息，包括：</p>
+<ul>
+<li><code>IsInitialized()</code>：检查是否已设置所有必填字段。</li>
+<li><code>__str__()</code>：返回消息的可读形式，对于调试特别有用。（通常以<code>str(message)</code>或调用<code>print message</code>。）</li>
+<li><code>CopyFrom(other_msg)</code>：使用给定消息的值覆盖消息。</li>
+<li><code>Clear()</code>：将所有元素清除为空状态。</li>
+</ul>
+<h4 id="解析和序列化"><a href="#解析和序列化" class="headerlink" title="解析和序列化"></a>解析和序列化</h4><ul>
+<li><code>SerializeToString()</code>：序列化消息并以字符串形式返回。</li>
+<li><code>ParseFromString(data)</code>：解析给定字符串中的消息</li>
+</ul>
+<h3 id="写一个消息"><a href="#写一个消息" class="headerlink" title="写一个消息"></a>写一个消息</h3><p>现在写一个地址进入地址薄文件。需要创建并填充protocol buffer类的实例，然后将他们写入输出流。</p>
+<p>这个python程序是读AddressBook，加入一个Person，把AddressBook放回文件。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#! /usr/bin/python</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> addressbook_pb2</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"></span><br><span class="line"><span class="comment"># This function fills in a Person message based on user input.</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">PromptForAddress</span>(<span class="params">person</span>):</span><br><span class="line">  person.<span class="built_in">id</span> = <span class="built_in">int</span>(raw_input(<span class="string">&quot;Enter person ID number: &quot;</span>))</span><br><span class="line">  person.name = raw_input(<span class="string">&quot;Enter name: &quot;</span>)</span><br><span class="line"></span><br><span class="line">  email = raw_input(<span class="string">&quot;Enter email address (blank for none): &quot;</span>)</span><br><span class="line"><span class="comment">#  if email != &quot;&quot;:</span></span><br><span class="line"><span class="comment">#    person.email = email</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">    number = raw_input(<span class="string">&quot;Enter a phone number (or leave blank to finish): &quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> number == <span class="string">&quot;&quot;</span>:</span><br><span class="line">      <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">    phone_number = person.phones.add()</span><br><span class="line">    phone_number.number = number</span><br><span class="line"></span><br><span class="line">    <span class="built_in">type</span> = raw_input(<span class="string">&quot;Is this a mobile, home, or work phone? &quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">type</span> == <span class="string">&quot;mobile&quot;</span>:</span><br><span class="line">      phone_number.phonetype = addressbook_pb2.Person.PhoneType.Mobile</span><br><span class="line">    <span class="keyword">elif</span> <span class="built_in">type</span> == <span class="string">&quot;home&quot;</span>:</span><br><span class="line">      phone_number.phonetype = addressbook_pb2.Person.PhoneType.Home</span><br><span class="line">    <span class="keyword">elif</span> <span class="built_in">type</span> == <span class="string">&quot;work&quot;</span>:</span><br><span class="line">      phone_number.phonetype = addressbook_pb2.Person.PhoneType.Work</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">      <span class="built_in">print</span> <span class="string">&quot;Unknown phone type; leaving as default value.&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Main procedure:  Reads the entire address book from a file,</span></span><br><span class="line"><span class="comment">#   adds one person based on user input, then writes it back out to the same</span></span><br><span class="line"><span class="comment">#   file.</span></span><br><span class="line"><span class="keyword">if</span> <span class="built_in">len</span>(sys.argv) != <span class="number">2</span>:</span><br><span class="line">  <span class="built_in">print</span> <span class="string">&quot;Usage:&quot;</span>, sys.argv[<span class="number">0</span>], <span class="string">&quot;ADDRESS_BOOK_FILE&quot;</span></span><br><span class="line">  sys.exit(-<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">address_book = addressbook_pb2.AddressBook()</span><br><span class="line"></span><br><span class="line"><span class="comment"># Read the existing address book.</span></span><br><span class="line"><span class="keyword">try</span>:</span><br><span class="line">  f = <span class="built_in">open</span>(sys.argv[<span class="number">1</span>], <span class="string">&quot;rb&quot;</span>)</span><br><span class="line">  address_book.ParseFromString(f.read())</span><br><span class="line">  f.close()</span><br><span class="line"><span class="keyword">except</span> IOError:</span><br><span class="line">  <span class="built_in">print</span> sys.argv[<span class="number">1</span>] + <span class="string">&quot;: Could not open file.  Creating a new one.&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Add an address.</span></span><br><span class="line">PromptForAddress(address_book.person.add())</span><br><span class="line"></span><br><span class="line"><span class="comment"># Write the new address book back to disk.</span></span><br><span class="line">f = <span class="built_in">open</span>(sys.argv[<span class="number">1</span>], <span class="string">&quot;wb&quot;</span>)</span><br><span class="line">f.write(address_book.SerializeToString())</span><br><span class="line">f.close()</span><br></pre></td></tr></table></figure>
+
+<h3 id="读一个消息"><a href="#读一个消息" class="headerlink" title="读一个消息"></a>读一个消息</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#! /usr/bin/python</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> addressbook_pb2</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"></span><br><span class="line"><span class="comment"># Iterates though all people in the AddressBook and prints info about them.</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">ListPeople</span>(<span class="params">address_book</span>):</span><br><span class="line">  <span class="keyword">for</span> person <span class="keyword">in</span> address_book.person:</span><br><span class="line">    <span class="built_in">print</span> <span class="string">&quot;Person ID:&quot;</span>, person.<span class="built_in">id</span></span><br><span class="line">    <span class="built_in">print</span> <span class="string">&quot;  Name:&quot;</span>, person.name</span><br><span class="line"><span class="comment">#    if person.HasField(&#x27;email&#x27;):</span></span><br><span class="line"><span class="comment">#      print &quot;  E-mail address:&quot;, person.email</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> phone_number <span class="keyword">in</span> person.phones:</span><br><span class="line">      <span class="keyword">if</span> phone_number.phonetype == addressbook_pb2.Person.PhoneType.Mobile:</span><br><span class="line">        <span class="built_in">print</span> <span class="string">&quot;  Mobile phone #: &quot;</span>,</span><br><span class="line">      <span class="keyword">elif</span> phone_number.phonetype == addressbook_pb2.Person.PhoneType.Home:</span><br><span class="line">        <span class="built_in">print</span> <span class="string">&quot;  Home phone #: &quot;</span>,</span><br><span class="line">      <span class="keyword">elif</span> phone_number.phonetype == addressbook_pb2.Person.PhoneType.Work:</span><br><span class="line">        <span class="built_in">print</span> <span class="string">&quot;  Work phone #: &quot;</span>,</span><br><span class="line">      <span class="built_in">print</span> phone_number.number</span><br><span class="line"></span><br><span class="line"><span class="comment"># Main procedure:  Reads the entire address book from a file and prints all</span></span><br><span class="line"><span class="comment">#   the information inside.</span></span><br><span class="line"><span class="keyword">if</span> <span class="built_in">len</span>(sys.argv) != <span class="number">2</span>:</span><br><span class="line">  <span class="built_in">print</span> <span class="string">&quot;Usage:&quot;</span>, sys.argv[<span class="number">0</span>], <span class="string">&quot;ADDRESS_BOOK_FILE&quot;</span></span><br><span class="line">  sys.exit(-<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">address_book = addressbook_pb2.AddressBook()</span><br><span class="line"></span><br><span class="line"><span class="comment"># Read the existing address book.</span></span><br><span class="line">f = <span class="built_in">open</span>(sys.argv[<span class="number">1</span>], <span class="string">&quot;rb&quot;</span>)</span><br><span class="line">address_book.ParseFromString(f.read())</span><br><span class="line">f.close()</span><br><span class="line"></span><br><span class="line">ListPeople(address_book)</span><br></pre></td></tr></table></figure>
+
+<h1 id="gRPC"><a href="#gRPC" class="headerlink" title="gRPC"></a>gRPC</h1><p><img src="https://pic.downk.cc/item/5f518fa9160a154a67600318.jpg"></p>
+<p>gRPC指定通过参数和返回类型远程调用的方法。默认情况gRPC使用protocol buffer作为接口定义语言（IDL），描述服务接口和有效负载消息的结构。</p>
+<ul>
+<li><p>Unary RPCs 单个请求，单个响应</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">rpc</span> SayHello(HelloRequest) <span class="keyword">returns</span> (HelloResponse)</span>;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Server streaming RPCs 服务器流式RPC，客户端向服务器发送请求，并获取流以读取一系列消息。客户端从返回的流读取，直到没有消息，gRPC保证单个RPC调用中的消息顺序。</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">rpc</span> LotsOfReplies(HelloRequest) <span class="keyword">returns</span> (stream HelloResponse)</span>;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Client streaming RPCs 客户端流式RPC，客户端编写消息，并且以流的方式发送到服务器。客户端写完消息后，它将等待服务器读取消息并返回响应。gRPC再次保证了在单个RPC调用中的消息顺序。</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">rpc</span> LotsOfGreetings(stream HelloRequest) <span class="keyword">returns</span> (HelloResponse)</span>;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Bidirectional streaming RPCs 双向流式RPC，双方都使用读写流发送一系列消息。这两个流是独立运行的，因此客户端和服务器可以按照自己喜欢的顺序进行读写：例如，服务器可以在写响应之前等待接收所有客户端消息，或者可以先读取消息再写入消息，或读写的其他组合。每个流中的消息顺序都会保留。</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">rpc</span> BidiHello(stream HelloRequest) <span class="keyword">returns</span> (stream HelloResponse)</span>;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="调用API"><a href="#调用API" class="headerlink" title="调用API"></a>调用API</h3><p>从编译.proto文件开始，使用gRPC编译器插件，可以生成客户端和服务端的API代码，在客户端调用这些API，在服务端实现这些API。</p>
+<ul>
+<li>在服务器端，服务器实现服务声明的方法，并运行gRPC服务器来处理客户端调用。gRPC服务端解码传入的protocol buffers请求，并执行对应的服务方法，对服务器的响应进行编码protocol buffers发送给客户端。</li>
+<li>在客户端，客户端具有称为<em>stub</em>的本地对象（对于某些语言，首选术语是<em>client</em>），该对象实现与服务端相同的方法。然后，客户端可以只在本地调用这些方法，将调用的参数包装在适当的protocol buffers类型中。然后gRPC实现将请求发送到服务器并接受服务器返回的protocol buffers响应。</li>
+</ul>
+<h3 id="Synchronous-vs-asynchronous"><a href="#Synchronous-vs-asynchronous" class="headerlink" title="Synchronous vs. asynchronous"></a>Synchronous vs. asynchronous</h3><p>同步RPC调用是阻塞客户端直到收到服务端发送回来的响应，这种比较贴近抽象意义上的远程过程调用。但是本质上，网络是异步的，而且很多情况下需要不阻塞线程来调用RPC。</p>
+<h3 id="RPC的生命周期"><a href="#RPC的生命周期" class="headerlink" title="RPC的生命周期"></a>RPC的生命周期</h3><ul>
+<li><p>Unary RPCs 单个请求，单个响应</p>
+<ol>
+<li>客户端调用stub方法后，PRC会通知服务器客户端已调用的方法的metadata，方法名称和指定的存活期 。</li>
+<li>然后，服务器可以立即直接发送自己的init metadata（必须在任何响应之前发送），或者等待客户端的请求消息。发生哪一种是依据应用程序。</li>
+<li>如果是第二种，服务器收到客户端的请求消息后，它将创建和填充响应所需的所有工作。然后将响应（如果成功）连同状态详细信息（状态代码和可选状态消息）以及可选一起附加在metadata返回。</li>
+<li>如果响应状态为OK，则客户端将获得响应，从而在客户端完成呼叫。</li>
+</ol>
+</li>
+<li><p>Server streaming RPCs 服务器流式RPC</p>
+<p>与unary RPCs相似，不同之处在于服务端响应客户端的请求返回的是消息流，发送完所有消息后，服务器的状态信息（状态码和可选状态消息）附加在metadata返回给客户端。</p>
+</li>
+<li><p>Client streaming RPCs 客户端流式RPC</p>
+<p>与unary RPCs不同之处客户端发送的是消息流而不是单个消息。服务器返回的消息不一定在它收到所有的客户端消息之后。</p>
+</li>
+<li><p>Bidirectional streaming RPCs 双向流式RPC</p>
+<p>双向流式RPC中，调用是客户端使用函数方法产生的，服务端收到客户端的metadata和方法名以及截止日期，服务端返回它的metadata或者等待客户端发送消息流。</p>
+<p>客户端的流和服务器端的流是跟应用程序相关的，是相互独立的。因此客户端和服务器端可以按照任何顺序读取和写入消息。</p>
+<p>例如服务器端可以等收到所有消息后再发送消息，或者可以接受一条发送一条。</p>
+</li>
+</ul>
+<p><strong>需要注意的是，客户端和服务器端都可以独立的判定调用是否成功，有可能服务器端认为成功返回RPC调用，但是客户端却认为失败了</strong></p>
+<h3 id="Metadata"><a href="#Metadata" class="headerlink" title="Metadata"></a>Metadata</h3><p>元数据是以键值对列表的形式提供的有关特定RPC调用的信息（例如 <a target="_blank" rel="noopener" href="https://grpc.io/docs/guides/auth">身份验证详细信息</a>），其中键是字符串，值通常是字符串，但可以是二进制数据。</p>
+<h3 id="Channels"><a href="#Channels" class="headerlink" title="Channels"></a>Channels</h3><p>一个channel提供一个特殊的host和port对客户端和服务端。它是客户端或者stub创建时使用的，因此客户端可以指定参数来修改channel，例如是否开启消息压缩。</p>
+<p>一个channel有connected和idle状态。</p>
+<p>gRPC怎么处理通道是跟使用的语言有关。</p>
+<h3 id="Generate-gRPC-code"><a href="#Generate-gRPC-code" class="headerlink" title="Generate gRPC code"></a>Generate gRPC code</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python -m grpc_tools.protoc -I../../protos --python_out=. --grpc_python_out=. ../../protos/helloworld.proto</span><br></pre></td></tr></table></figure>
+
+<p>.proto文件</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">service </span><span class="title class_">RouteGuide</span> &#123;</span><br><span class="line">   <span class="comment">// (Method definitions not shown)</span></span><br><span class="line">   <span class="comment">// Obtains the feature at a given position.</span></span><br><span class="line">   <span class="function"><span class="keyword">rpc</span> GetFeature(Point) <span class="keyword">returns</span> (Feature) </span>&#123;&#125;</span><br><span class="line">   <span class="comment">// Obtains the Features available within the given Rectangle.  Results are</span></span><br><span class="line"><span class="comment">// streamed rather than returned at once (e.g. in a response message with a</span></span><br><span class="line"><span class="comment">// repeated field), as the rectangle may cover a large area and contain a</span></span><br><span class="line"><span class="comment">// huge number of features.</span></span><br><span class="line">	<span class="function"><span class="keyword">rpc</span> ListFeatures(Rectangle) <span class="keyword">returns</span> (stream Feature) </span>&#123;&#125;</span><br><span class="line">	<span class="comment">// Accepts a stream of Points on a route being traversed, returning a</span></span><br><span class="line"><span class="comment">// RouteSummary when traversal is completed.</span></span><br><span class="line">	<span class="function"><span class="keyword">rpc</span> RecordRoute(stream Point) <span class="keyword">returns</span> (RouteSummary) </span>&#123;&#125;</span><br><span class="line">	<span class="comment">// Accepts a stream of RouteNotes sent while a route is being traversed,</span></span><br><span class="line"><span class="comment">// while receiving other RouteNotes (e.g. from other users).</span></span><br><span class="line">	<span class="function"><span class="keyword">rpc</span> RouteChat(stream RouteNote) <span class="keyword">returns</span> (stream RouteNote) </span>&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line">	<span class="comment">// Points are represented as latitude-longitude pairs in the E7 representation</span></span><br><span class="line"><span class="comment">// (degrees multiplied by 10**7 and rounded to the nearest integer).</span></span><br><span class="line"><span class="comment">// Latitudes should be in the range +/- 90 degrees and longitude should be in</span></span><br><span class="line"><span class="comment">// the range +/- 180 degrees (inclusive).</span></span><br><span class="line"><span class="keyword">message </span><span class="title class_">Point</span> &#123;</span><br><span class="line">  <span class="type">int32</span> latitude = <span class="number">1</span>;</span><br><span class="line">  <span class="type">int32</span> longitude = <span class="number">2</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>生成的代码文件被称为 <code>route_guide_pb2.py</code>与<code>route_guide_pb2_grpc.py</code>和包含以下内容：</p>
+<ul>
+<li>route_guide.proto中定义的消息的类</li>
+<li>route_guide.proto中定义的服务的类<ul>
+<li><code>RouteGuideStub</code>，客户端可以使用它来调用RouteGuide RPC</li>
+<li><code>RouteGuideServicer</code>，它定义了RouteGuide服务的实现接口</li>
+</ul>
+</li>
+<li>route_guide.proto中定义的服务功能<ul>
+<li><code>add_RouteGuideServicer_to_server</code>，这会将RouteGuideServicer添加到 <code>grpc.Server</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="创建服务器"><a href="#创建服务器" class="headerlink" title="创建服务器"></a>创建服务器</h3><p>创建和运行<code>RouteGuide</code>服务器分为两个工作项：</p>
+<ul>
+<li>使用我们执行服务的实际“工作”的功能来实现从我们的服务定义中生成的服务程序接口。</li>
+<li>运行gRPC服务器以侦听来自客户端的请求并传输响应。</li>
+</ul>
+<p><code>route_guide_server.py</code>有一个<code>RouteGuideServicer</code>子类，该子类继承了生成的类<code>route_guide_pb2_grpc.RouteGuideServicer</code>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># RouteGuideServicer provides an implementation of the methods of the RouteGuide service.</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">RouteGuideServicer</span>(route_guide_pb2_grpc.RouteGuideServicer):</span><br></pre></td></tr></table></figure>
+
+<p><code>RouteGuideServicer</code>实现所有<code>RouteGuide</code>服务方法。</p>
+<h5 id="简单的RPC"><a href="#简单的RPC" class="headerlink" title="简单的RPC"></a>简单的RPC</h5><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">GetFeature</span>(<span class="params">self, request, context</span>):</span><br><span class="line">  feature = get_feature(self.db, request)</span><br><span class="line">  <span class="keyword">if</span> feature <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">    <span class="keyword">return</span> route_guide_pb2.Feature(name=<span class="string">&quot;&quot;</span>, location=request)</span><br><span class="line">  <span class="keyword">else</span>:</span><br><span class="line">    <span class="keyword">return</span> feature</span><br></pre></td></tr></table></figure>
+
+<h4 id="启动服务器"><a href="#启动服务器" class="headerlink" title="启动服务器"></a>启动服务器</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">serve</span>():</span><br><span class="line">  server = grpc.server(futures.ThreadPoolExecutor(max_workers=<span class="number">10</span>))</span><br><span class="line">  route_guide_pb2_grpc.add_RouteGuideServicer_to_server(</span><br><span class="line">      RouteGuideServicer(), server)</span><br><span class="line">  server.add_insecure_port(<span class="string">&#x27;[::]:50051&#x27;</span>)</span><br><span class="line">  server.start()</span><br><span class="line">  server.wait_for_termination()</span><br></pre></td></tr></table></figure>
+
+<p>服务器<code>start()</code>方法是非阻塞的。将实例化一个新线程来处理请求。<code>server.start()</code>在此期间，线程调用通常不会有任何其他工作。在这种情况下，您可以调用 <code>server.wait_for_termination()</code>以干净地阻止调用线程，直到服务器终止。</p>
+<h3 id="创建客户端"><a href="#创建客户端" class="headerlink" title="创建客户端"></a>创建客户端</h3><h4 id="创建存根"><a href="#创建存根" class="headerlink" title="创建存根"></a>创建存根</h4><p>我们实例化 由.proto生成<code>RouteGuideStub</code>的<code>route_guide_pb2_grpc</code>模块的类。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">channel = grpc.insecure_channel(<span class="string">&#x27;localhost:50051&#x27;</span>)</span><br><span class="line">stub = route_guide_pb2_grpc.RouteGuideStub(channel)</span><br></pre></td></tr></table></figure>
+
+<h4 id="致电服务方式"><a href="#致电服务方式" class="headerlink" title="致电服务方式"></a>致电服务方式</h4><p>对于返回单个响应的RPC方法（“响应一元”方法），gRPC Python支持同步（阻塞）和异步（非阻塞）控制流语义。对于响应流式RPC方法，调用立即返回响应值的迭代器。调用该迭代器的<code>next()</code>方法块，直到从迭代器产生的响应变为可用为止。</p>
+<h5 id="简单的RPC-1"><a href="#简单的RPC-1" class="headerlink" title="简单的RPC"></a>简单的RPC</h5><p>对简单RPC的同步调用<code>GetFeature</code>几乎与调用本地方法一样简单。RPC调用等待服务器响应，并且将返回响应或引发异常：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">feature = stub.GetFeature(point)</span><br></pre></td></tr></table></figure>
+
+<p>异步调用与之<code>GetFeature</code>类似，但是就像在线程池中异步调用本地方法一样：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">feature_future = stub.GetFeature.future(point)</span><br><span class="line">feature = feature_future.result()</span><br></pre></td></tr></table></figure>
+<h1 id="对比thrift与AMQP"><a href="#对比thrift与AMQP" class="headerlink" title="对比thrift与AMQP"></a>对比thrift与AMQP</h1><h4 id="Thrift简介"><a href="#Thrift简介" class="headerlink" title="Thrift简介"></a>Thrift简介</h4><h5 id="什么是thrift"><a href="#什么是thrift" class="headerlink" title="什么是thrift"></a>什么是thrift</h5><p>简单来说,是Facebook公布的一款开源跨语言的RPC框架.</p>
+<p>与此类似的是rabbitMQ，属于AMQP，进行RPC通信</p>
+<h5 id="什么是RPC框架"><a href="#什么是RPC框架" class="headerlink" title="什么是RPC框架?"></a>什么是RPC框架?</h5><p>RPC (Remote Procedure Call Protocal)，远程过程调用协议</p>
+<p>RPC, 远程过程调用直观说法就是A通过网络调用B的过程方法。</p>
+<ul>
+<li>简单的说，RPC就是从一台机器（客户端）上通过参数传递的方式调用另一台机器（服务器）上的一个函数或方法（可以统称为服务）并得到返回的结果。</li>
+<li>RPC 会隐藏底层的通讯细节（不需要直接处理Socket通讯或Http通讯） RPC 是一个请求响应模型。</li>
+<li>客户端发起请求，服务器返回响应（类似于Http的工作方式） RPC 在使用形式上像调用本地函数（或方法）一样去调用远程的函数（或方法）。</li>
+</ul>
+<p><strong>RPC 框架的目标就是让远程服务调用更加简单、透明</strong>，RPC 框架负责屏蔽底层的传输方式（TCP 或者 UDP）、序列化方式（XML&#x2F;Json&#x2F; 二进制）和通信细节。<strong>服务调用者可以像调用本地接口一样调用远程的服务提供者，而不需要关心底层通信细节和调用过程。</strong></p>
+<p>RPC 框架的调用原理图如下所示：</p>
+<p><img src="https://pic.downk.cc/item/5fb4deffb18d62711359873d.jpg"></p>
+<p>早期单机时代，一台电脑上运行多个进程，大家各干各的，老死不相往来。假如A进程需要一个画图的功能，B进程也需要一个画图的功能，程序员就必须为两个进程都写一个画图的功能。这不是整人么？于是就出现了IPC（Inter-process communication，单机中运行的进程之间的相互通信）。OK，现在A既然有了画图的功能，B就调用A进程上的画图功能好了，程序员终于可以偷下懒了。</p>
+<p>到了网络时代，大家的电脑都连起来了。以前程序只能调用自己电脑上的进程，能不能调用其他机器上的进程呢？于是就程序员就把IPC扩展到网络上，这就是RPC（远程过程调用）了。现在不仅单机上的进程可以相互通信，多机器中的进程也可以相互通信了。要知道实现RPC很麻烦呀，什么多线程、什么Socket、什么I&#x2F;O，都是让咱们普通程序员很头疼的事情。于是就有牛人开发出RPC框架（比如，CORBA、RMI、Web Services、RESTful Web Services等等）。OK，现在可以定义RPC框架的概念了。简单点讲，RPC框架就是可以让程序员来调用远程进程上的代码一套工具。有了RPC框架，咱程序员就轻松很多了，终于可以逃离多线程、Socket、I&#x2F;O的苦海了。</p>
+<h5 id="thrift的跨语言特型"><a href="#thrift的跨语言特型" class="headerlink" title="thrift的跨语言特型"></a>thrift的跨语言特型</h5><p>thrift通过一个中间语言IDL(接口定义语言)来定义RPC的数据类型和接口,这些内容写在以.thrift结尾的文件中,然后通过特殊的编译器来生成不同语言的代码,以满足不同需要的开发者,比如java开发者,就可以生成java代码,c++开发者可以生成c++代码,生成的代码中不但包含目标语言的接口定义,方法,数据类型,还包含有RPC协议层和传输层的实现代码.</p>
+<h5 id="thrift的协议栈结构"><a href="#thrift的协议栈结构" class="headerlink" title="thrift的协议栈结构"></a>thrift的协议栈结构</h5><p>thrift是一种c&#x2F;s的架构体系。在最上层是用户自行实现的业务逻辑代码。<br> 　第二层是由thrift编译器自动生成的代码，主要用于结构化数据的解析，发送和接收。TServer主要任务是高效的接受客户端请求，并将请求转发给Processor处理。Processor负责对客户端的请求做出响应，包括RPC请求转发，调用参数解析和用户逻辑调用，返回值写回等处理。<br> 　从TProtocol以下部分是thirft的传输协议和底层I&#x2F;O通信。TProtocol是用于数据类型解析的，将结构化数据转化为字节流给TTransport进行传输。TTransport是与底层数据传输密切相关的传输层，负责以字节流方式接收和发送消息体，不关注是什么数据类型。底层IO负责实际的数据传输，包括socket、文件和压缩数据流等。</p>
+<h4 id="Thrift安装"><a href="#Thrift安装" class="headerlink" title="Thrift安装"></a>Thrift安装</h4><p>安装环境：window 7</p>
+<ul>
+<li>在<a target="_blank" rel="noopener" href="https://link.jianshu.com/?t=http://archive.apache.org/dist/thrift/0.9.3/">官网</a>上下载thrift-0.9.3.exe包到一个新建文件夹(博主的文件夹名称为Thrift)中</li>
+<li>然后将此文件夹放到环境变量Path中。例如博主就是将D:Thrift添加到Path中</li>
+<li>cmd，打开终端，输入<code>thrift -version</code>，即可看到相应的版本号，就算是成功安装啦</li>
+</ul>
+<h1 id="AMQP-Advanced-message-queuing-protocol"><a href="#AMQP-Advanced-message-queuing-protocol" class="headerlink" title="AMQP(Advanced message queuing protocol)"></a>AMQP(Advanced message queuing protocol)</h1><p>RabbitMQ：服务端采用Erlang语言，客户端支持多种语言。进行RPC通讯。</p>
+<p>AMQP基本概念：</p>
+<p><img src="https://pic.downk.cc/item/5f0433f714195aa5947e67cb.png"></p>
+<h2 id="AMQP的消息转发"><a href="#AMQP的消息转发" class="headerlink" title="AMQP的消息转发"></a>AMQP的消息转发</h2><p>AMQP server里有两个部件：</p>
+<ul>
+<li>EXChange 接受Product发送的消息，按照一定的规则转发到响应的message Queues中</li>
+<li>message queues再将消息转发到相应的consumers</li>
+</ul>
+<p>Product1产生的消息经过AMQP server转发到Consumer_n，起关键作用的路由标识是字符串Routing Key。</p>
+<p>每个Product生产消息时都会带上Routing key，而Consumer会告诉AMQP server它希望接受的消息Routing Key时什么。</p>
+<p>Message Queue匹配时有三种匹配方式</p>
+<ul>
+<li>direct Exchanges 全值匹配</li>
+<li>Topic Exchanges 通配符匹配，<code>*</code>代表一个字符串，<code>#</code>代表任意多个子字符串，product生产的字符串是用<code>.</code>隔开的子字符串</li>
+<li>Fanout Exchanges 广播匹配，没有Routing key</li>
+</ul>
+<p>基于AMQP的以上三种消息转发模型，有三种通信模式：</p>
+<ul>
+<li>RPC(远程过程调用)</li>
+<li>发布-订阅</li>
+<li>广播</li>
+</ul>
+<p>后两种基于通配符匹配和广播匹配就行了，主要讲一下RPC：</p>
+<p>RPC是一种C&#x2F;S通信模型，当Client发送request时，C是Product，S是Consumer；</p>
+<p>当server回复response时，S是Product，C是Consumer。</p>
+<p>因此基于AMQP的RPC实现原理如下图：</p>
+<p><img src="https://pic.downk.cc/item/5f043a0c14195aa59480f992.png"></p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>Ian Tang</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://tkhfree.github.io/2022/11/27/gRPC%E5%92%8Cprotobuf%E4%BB%8B%E7%BB%8D-2022-11-27/">https://tkhfree.github.io/2022/11/27/gRPC%E5%92%8Cprotobuf%E4%BB%8B%E7%BB%8D-2022-11-27/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/grpc/"># grpc</a>
+                    
+                        <a href="/tags/protobuf/"># protobuf</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2022/11/27/python%E5%8C%85%E7%9A%84%E5%87%A0%E7%A7%8D%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7-2022-11-27/">python包的几种管理工具</a>
+            
+            
+            <a class="next" rel="next" href="/2022/11/27/P4%E8%AF%AD%E8%A8%80%E5%85%A5%E9%97%A8-2022-11-27/">SDN架构与P4语言入门</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Ian Tang | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>

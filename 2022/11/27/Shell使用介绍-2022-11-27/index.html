@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Ian Tang">
+
+
+    <meta name="subtitle" content="岁月不居时节如流">
+
+
+    <meta name="description" content="好记性不如烂笔头">
+
+
+
+<title>Shell使用介绍 | 随笔</title>
+
+
+
+    <link rel="icon" href="/image/The_Lion_King_32_32.png">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Tangkaifei&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Tangkaifei&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    var tocbot_timer;
+    var DEPTH_MAX = 6; // 为 6 时展开所有
+    var tocbot_default_config = {
+        tocSelector: '.tocbot-list',
+        contentSelector: '.post-content',
+        headingSelector: 'h1, h2, h3, h4, h5',
+        orderedList: false,
+        scrollSmooth: true,
+        onClick: extend_click,
+    };
+
+    function extend_click() {
+        clearTimeout(tocbot_timer);
+        tocbot_timer = setTimeout(function() {
+            tocbot.refresh(obj_merge(tocbot_default_config, {
+                hasInnerContainers: true
+            }));
+        }, 420); // 这个值是由 tocbot 源码里定义的 scrollSmoothDuration 得来的
+    }
+
+    document.ready(function() {
+        tocbot.init(obj_merge(tocbot_default_config, {
+            collapseDepth: 1
+        }));
+    });
+
+    function expand_toc() {
+        var b = document.querySelector('.tocbot-toc-expand');
+        var expanded = b.getAttribute('data-expanded');
+        expanded ? b.removeAttribute('data-expanded') : b.setAttribute('data-expanded', true);
+        tocbot.refresh(obj_merge(tocbot_default_config, {
+            collapseDepth: expanded ? 1 : DEPTH_MAX
+        }));
+        b.innerText = expanded ? 'Expand all' : 'Collapse all';
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function obj_merge(target, source) {
+        for (var item in source) {
+            if (source.hasOwnProperty(item)) {
+                target[item] = source[item];
+            }
+        }
+        return target;
+    }
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Shell使用介绍</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">Ian Tang</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">十一月 27, 2022&nbsp;&nbsp;12:07:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E6%8A%80%E6%9C%AF%EF%BC%9A%E7%9F%A5%E8%AF%86%E6%8A%80%E8%83%BD/">技术：知识技能</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p>shell脚本的一些方法，想到什么命令就记什么命令了。<br>[toc]</p>
+<h3 id="set"><a href="#set" class="headerlink" title="set"></a>set</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">set -u -x -e -o pipefail</span><br><span class="line">开局使用</span><br><span class="line">-u是使用未定义的变量时报错并终止。</span><br><span class="line">-x是先打印脚本里执行的命令再执行</span><br><span class="line">-e只要遇到错误就终止执行 +e关闭这个功能</span><br><span class="line">-o pipefail是针对管线的，因为对于管线命令来说，只要管线最后输出exit 0/执行正确，则-e -u等就不会终止执行，使用这个可以对管线每个命令进行判断</span><br></pre></td></tr></table></figure>
+
+<p>还有另一种针对单个命令执行判断的方法</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">command || exit 1</span><br></pre></td></tr></table></figure>
+
+<h3 id="sed"><a href="#sed" class="headerlink" title="sed"></a>sed</h3><p>sed 简单用法 - 低调行事的文章 - 知乎 <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/109773710sed">https://zhuanlan.zhihu.com/p/109773710sed</a> 简单用法 - 低调行事的文章 - 知乎 <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/109773710">https://zhuanlan.zhihu.com/p/109773710</a></p>
+<h3 id="与-amp-amp"><a href="#与-amp-amp" class="headerlink" title="||与&amp;&amp;"></a>||与&amp;&amp;</h3><p>|| 与 &amp;&amp;的区别</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">command1 || command2</span><br><span class="line">执行完command1不成功才执行command2</span><br><span class="line"></span><br><span class="line">command1 &amp;&amp; command2 </span><br><span class="line">执行完command1成功之后执行command2</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">` `之内的内容是需要执行的命令，取执行命令的结果</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">grep -c ^head &lt;file&gt;</span><br><span class="line">输出file文件head开头的字符串个数</span><br></pre></td></tr></table></figure>
+
+<h3 id="运算符"><a href="#运算符" class="headerlink" title="运算符"></a>运算符</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">取变量名用$,像c语言的指针概念。</span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">0 脚本本身的名称</span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">1 脚本后跟的第一个参数</span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash"><span class="comment"># 参数个数</span></span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">？最后命令的退出状态</span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">* 所有参数</span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">$ 脚本当成进程<span class="built_in">id</span>号</span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">@ 与$*作用一样</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">expr是一款表达式计算器，可以计算数值运算的值</span><br><span class="line">`expr 1 + 1 `</span><br><span class="line">或者</span><br><span class="line">$[ 1+1 ]</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">关系运算符（只适用于数字）</span><br><span class="line">-eq 检查是否相等，相等返回true    : equals</span><br><span class="line">-ne 检查是否相等，不相等返回true  : not equals</span><br><span class="line">-gt 左边大于右边，返回true       : greater than</span><br><span class="line">-lt 右边大于左边，返回true       : less than</span><br><span class="line">-ge 左边大于等于右边，返回true    : greater equals</span><br><span class="line">-le 左边小于等于右边，返回true    : less equals</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">! 非运算</span><br><span class="line">-o 或运算</span><br><span class="line">-a 与运算</span><br><span class="line"></span><br><span class="line">-e 文件或者目录是否存在  ： -e $file</span><br></pre></td></tr></table></figure>
+
+<h3 id="脚本输出EOF用法"><a href="#脚本输出EOF用法" class="headerlink" title="脚本输出EOF用法"></a>脚本输出EOF用法</h3><p>EOF通常都配合&lt;&lt;使用，unix环境下&lt;&lt;之后的字符是一个标志符，标识符之间的内容被输入，所以标识符可以是任何内容，只是通常用EOF（End Of File）代替。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;&lt; EOF</span><br><span class="line">...</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<p>…内容都被输入进去。</p>
+<p>输入到哪用cat &gt;&gt;来指定文件</p>
+<p>&lt; :输入重定向<br>&gt; :输出重定向<br>&gt;&gt; :输出重定向,进行追加,不会覆盖之前内容<br>&lt;&lt; :标准输入来自命令行的一对分隔号的中间内容.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xxxxxxxxxx tangkaifeideMacBook-Pro:Documents tang$ cat &lt;&lt;EOF &gt;&gt;test.sh &quot;this is a cat&amp;EOF demo&quot; EOF</span><br></pre></td></tr></table></figure>
+
+<h3 id="echo用法"><a href="#echo用法" class="headerlink" title="echo用法"></a>echo用法</h3><p>结果定向至文件</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo &quot;It is a test&quot; &gt; myfile</span><br></pre></td></tr></table></figure>
+
+<p>显示命令结果用   **`   ` ** 表示或者$()</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">echo `ls`</span><br><span class="line">echo $(ls)</span><br></pre></td></tr></table></figure>
+
+<h3 id="输入重定向"><a href="#输入重定向" class="headerlink" title="输入重定向"></a>输入重定向</h3><p>标准输入	命令&lt;文件1	命令把文件1的内容作为标准输入设备<br>标识符限定输入	命令&lt;&lt;标识符	命令把标准输入中读入内容，直到遇到“标识符”分解符为止<br>输入输出重定向（同时使用）	命令&lt; 文件1 &gt;文件2	命令把文件1的内容作为标准输入，把文件2作为标准输出。</p>
+<p>还有一个进程替换&lt;()</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cat</span> &lt;(<span class="built_in">ls</span>)    <span class="comment">#把&lt;(ls)当一个临时文件，文件内容是ls的结果，cat这个临时文件</span></span></span><br></pre></td></tr></table></figure>
+
+<h3 id="输出重定向"><a href="#输出重定向" class="headerlink" title="输出重定向"></a>输出重定向</h3><ul>
+<li>0: 代表标准输入</li>
+<li>1: 代表标准输出</li>
+<li>2:代表标准错误输出</li>
+</ul>
+<p>正常输入输出都会在控制台显示，例如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">tangkaifeideMacBook-Pro:Documents tang$ ls</span><br><span class="line">tang_hexo_blog	test.sh</span><br><span class="line">tangkaifeideMacBook-Pro:Documents tang$ ls -l test.sh errofile</span><br><span class="line">ls: errofile: No such file or directory</span><br><span class="line">-rw-r--r--  1 tang  staff  40  5 22 17:23 test.sh</span><br><span class="line">tangkaifeideMacBook-Pro:Documents tang$ </span><br></pre></td></tr></table></figure>
+
+<p>我们可以把正常输出定向到文件夹内：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">tangkaifeideMacBook-Pro:Documents tang$ ls -l test.sh errofile &gt;test.sh </span><br><span class="line">ls: errofile: No such file or directory</span><br><span class="line">tangkaifeideMacBook-Pro:Documents tang$ cat test.sh </span><br><span class="line">-rw-r--r--  1 tang  staff  0  5 22 17:36 test.sh</span><br></pre></td></tr></table></figure>
+
+<p>或者一样效果的：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">tangkaifeideMacBook-Pro:Documents tang$ ls -l test.sh errofile 1&gt;test.sh </span><br><span class="line">ls: errofile: No such file or directory</span><br><span class="line">tangkaifeideMacBook-Pro:Documents tang$ cat test.sh </span><br><span class="line">-rw-r--r--  1 tang  staff  0  5 22 17:36 test.sh</span><br><span class="line">tangkaifeideMacBook-Pro:Documents tang$ </span><br></pre></td></tr></table></figure>
+
+<p>与此对应，可以把错误输出定向到文件夹内:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">tangkaifeideMacBook-Pro:Documents tang$ ls -l test.sh errofile 2&gt;test.sh </span><br><span class="line">-rw-r--r--  1 tang  staff  0  5 22 17:37 test.sh</span><br><span class="line">tangkaifeideMacBook-Pro:Documents tang$ cat test.sh </span><br><span class="line">ls: errofile: No such file or directory</span><br><span class="line">tangkaifeideMacBook-Pro:Documents tang$ </span><br></pre></td></tr></table></figure>
+
+<p>如果同时重定向错误信息和重定向标准输出到文件必须使用两个重定向符号，并且必须在重定向符前加上相应的文件描述符:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">tangkaifeideMacBook-Pro:Documents tang$ ls -l test.sh errorfile 1&gt;testright.txt 2&gt;testerror.txt </span><br><span class="line">tangkaifeideMacBook-Pro:Documents tang$ cat testright.txt </span><br><span class="line">-rw-r--r--  1 tang  staff  40  5 22 17:37 test.sh</span><br><span class="line">tangkaifeideMacBook-Pro:Documents tang$ cat testerror.txt </span><br><span class="line">ls: errorfile: No such file or directory</span><br><span class="line">tangkaifeideMacBook-Pro:Documents tang$ </span><br></pre></td></tr></table></figure>
+
+<p>如果想将标准输出和错误信息重定向到一个日志文件，Bash Shell提供了&amp;符，就不需要使用两个重定向符了:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">tangkaifeideMacBook-Pro:Documents tang$ ls -l test.sh errorfile &gt;test.sh 2&gt;&amp;1</span><br><span class="line">tangkaifeideMacBook-Pro:Documents tang$ cat test.sh </span><br><span class="line">ls: errorfile: No such file or directory</span><br><span class="line">-rw-r--r--  1 tang  staff  0  5 22 17:43 test.sh</span><br><span class="line">tangkaifeideMacBook-Pro:Documents tang$ </span><br></pre></td></tr></table></figure>
+
+<h3 id="重定向到垃圾桶"><a href="#重定向到垃圾桶" class="headerlink" title="重定向到垃圾桶"></a>重定向到垃圾桶</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">command &gt;/dev/null 2&gt;&amp;1 #0标准输入 1标准输出 2错误输出</span><br></pre></td></tr></table></figure>
+
+<h3 id="输出变量"><a href="#输出变量" class="headerlink" title="输出变量"></a>输出变量</h3><p><code>( set -o posix ; set ) | less</code></p>
+<h3 id="查看进程"><a href="#查看进程" class="headerlink" title="查看进程"></a>查看进程</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ps -ef|grep syslog|grep -v &quot;grep&quot;</span><br><span class="line"></span><br><span class="line">pstree -p PID #查看进程树</span><br><span class="line">top -H -p PID #查看cpu利用率</span><br></pre></td></tr></table></figure>
+<h3 id="inode"><a href="#inode" class="headerlink" title="inode"></a>inode</h3><p>硬链接<code>ln</code>和软链接<code>ln -s</code>的区别，硬链接时两个文件有相同的inode号，软链接时创建一个文件，这个文件的内容是打开另一个文件的inode，所以两个文件虽然最终都是打开一个inode，但是创建两个inode。</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/xuz0917/article/details/79473562">Linux的inode的理解</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">利用$&#123; &#125; 还可针对不同的变数状态赋值(沒设定、空值、非空值)： </span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;file-my.file.txt&#125; ：假如<span class="variable">$file</span> 沒有设定，則使用my.file.txt 作传回值。(空值及非空值時不作处理)</span> </span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;file:-my.file.txt&#125; ：假如<span class="variable">$file</span> 沒有設定或為空值，則使用my.file.txt 作傳回值。(非空值時不作处理)</span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;file+my.file.txt&#125; ：假如<span class="variable">$file</span> 設為空值或非空值，均使用my.file.txt 作傳回值。(沒設定時不作处理)</span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;file:+my.file.txt&#125; ：若<span class="variable">$file</span> 為非空值，則使用my.file.txt 作傳回值。(沒設定及空值時不作处理)</span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;file=my.file.txt&#125; ：若<span class="variable">$file</span> 沒設定，則使用my.file.txt 作傳回值，同時將<span class="variable">$file</span> 賦值為my.file.txt 。(空值及非空值時不作处理)</span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;file:=my.file.txt&#125; ：若<span class="variable">$file</span> 沒設定或為空值，則使用my.file.txt 作傳回值，同時將<span class="variable">$file</span> 賦值為my.file.txt 。(非空值時不作处理)</span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;file?my.file.txt&#125; ：若<span class="variable">$file</span> 沒設定，則將my.file.txt 輸出至STDERR。(空值及非空值時不作处理)</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;file:?my.file.txt&#125; ：若<span class="variable">$file</span> 没设定或为空值，则将my.file.txt 输出至STDERR。(非空值時不作处理)</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;<span class="comment">#var&#125; 可计算出变量值的长度：</span></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;<span class="comment">#file&#125; 可得到27 ，因为/dir1/dir2/dir3/my.file.txt 是27个字节</span></span></span><br></pre></td></tr></table></figure>
+
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/264346586">一篇教会你写90%的shell脚本-zhihu</a></p>
+<hr>
+<p>在${ }内可以实现字符串的替换、删除、截取</p>
+<ul>
+<li>截取</li>
+</ul>
+<p>可以有从指定位置计数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$&#123;cfg:2:5&#125; //字符串：开始位置：截取的长度 </span><br><span class="line">$&#123;cfg:2&#125; //截取从第2个字符开始直到字符串结尾</span><br></pre></td></tr></table></figure>
+<p>及从指定的子字符串计数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$&#123;cfg#*substring&#125; //*substring就是子字符串，cfg是字符串，从substring匹配到的左侧全都不要；##代表最后一个匹配到的子字符串</span><br><span class="line">$&#123;cfg%substring*&#125;  //同理，从substring开始的之后所有字符串就不要了，*代表的是通用匹配符，注意左侧右侧截取分别是#和%；%%代表最后一个匹配到的子字符串</span><br></pre></td></tr></table></figure>
+<ul>
+<li>替换<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$&#123;cfg/原来字符/新的字符&#125;</span><br><span class="line">例如$&#123;cfg/aa/bb&#125; //将aa替换成bb</span><br><span class="line">$&#123;cfg/\//\#&#125;    //将/替换成#</span><br><span class="line">$&#123;cfg//aa/bb&#125;   //将所有aa替换成bb	</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="export和source"><a href="#export和source" class="headerlink" title="export和source"></a>export和source</h3><p>export定义了之后变量变为系统变量，可以再本进程和子进程中调用，但是在脚本中定义了之后，在登录的shell进程中不能调用，因为登录的shell进程是该脚本的父进程<br>source可以免除注销再登录的变量定义，例如在脚本中定义了变量，source该脚本，则在登录的shell进程中可以调用，相当于没有再执行子进程</p>
+<p><strong>总结：export定义的变量可以在本进程和子进程中使用，不能在父进程中调用；source脚本是把脚本在登录shell中执行，没有开子进程</strong></p>
+<p><strong>linux的网络配置主要在&#x2F;etc里</strong></p>
+<p>&#x2F;etc&#x2F;sysconfig&#x2F;network-scrips&#x2F;ifcfg-en0<br>设定网卡的参数，例如ip、子网掩码、路由器、IP获取方式等</p>
+<p>&#x2F;etc&#x2F;hosts<br>设定主机别名和ip的对应</p>
+<p>&#x2F;etc&#x2F;services<br>设置Linux里服务进程的端口</p>
+<p>&#x2F;etc&#x2F;resolve.conf<br>设置dns的地址</p>
+<h3 id="Linux的网络指令"><a href="#Linux的网络指令" class="headerlink" title="Linux的网络指令"></a>Linux的网络指令</h3><p>ifconfig 查看网卡信息</p>
+<p>route 查看路由表</p>
+<p>ping 测试通不通</p>
+<p>traceroute 查看路由转发的节点</p>
+<p>netstat 查看网络服务的端口启动情况 netstat -tulnp</p>
+<p>host 查看域名对应的ip，调用&#x2F;etc&#x2F;resolv.conf的dns服务器查询</p>
+<p>telnet ftp ssh wget</p>
+<h3 id="tcpdump-封包分析指令"><a href="#tcpdump-封包分析指令" class="headerlink" title="tcpdump 封包分析指令"></a>tcpdump 封包分析指令</h3><p>[root@linux ~]# tcpdump [-nn] [-i 介面] [-w 储存档名] [-c 次数] [-Ae]<br>                        [-qX] [-r 档案] [所欲撷取的资料内容]<br>参数：<br>-nn：直接以 IP 及 port number 显示，而非主机名与服务名称<br>-i ：后面接要‘监听’的网路介面，例如 eth0, lo, ppp0 等等的介面；<br>-w ：如果你要将监听所得的封包资料储存下来，用这个参数就对了！后面接档名<br>-c ：监听的封包数，如果没有这个参数， tcpdump 会持续不断的监听，<br>     直到使用者输入 [ctrl]-c 为止。<br>-A ：封包的内容以 ASCII 显示，通常用来捉取 WWW 的网页封包资料。<br>-e ：使用资料连接层 (OSI 第二层) 的 MAC 封包资料来显示；<br>-q ：仅列出较为简短的封包资讯，每一行的内容比较精简<br>-X ：可以列出十六进位 (hex) 以及 ASCII 的封包内容，对于监听封包内容很有用<br>-r ：从后面接的档案将封包资料读出来。那个‘档案’是已经存在的档案，<br>     并且这个‘档案’是由 -w 所制作出来的。<br>所欲撷取的资料内容：我们可以专门针对某些通讯协定或者是 IP 来源进行封包撷取，<br>     那就可以简化输出的结果，并取得最有用的资讯。常见的表示方法有：<br>     ‘host foo’, ‘host 127.0.0.1’ ：针对单部主机来进行封包撷取<br>     ‘net 192.168’ ：针对某个网域来进行封包的撷取；<br>     ‘src host 127.0.0.1’ ‘dst net 192.168’：同时加上来源(src)或目标(dst)限制<br>     ‘tcp port 21’：还可以针对通讯协定侦测，如 tcp, udp, arp, ether 等<br>     还可以利用 and 与 or 来进行封包资料的整合显示呢！</p>
+<p>nc 或者 netcat<br>nc -l -p 20000 启用tcp协议的20000端口listen<br>nc localhost 20000 连接20000端口<br>可以在两个bash中进行同步通信</p>
+<h3 id="目录操作"><a href="#目录操作" class="headerlink" title="目录操作"></a>目录操作</h3><p><strong>创建目录</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir</span><br></pre></td></tr></table></figure>
+<p><strong>切换目录</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd ..</span><br><span class="line">cd</span><br></pre></td></tr></table></figure>
+<p><strong>移动目录</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mv /home/test /var/tmp</span><br></pre></td></tr></table></figure>
+<p><strong>删除目录</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rm -rf var/test</span><br></pre></td></tr></table></figure>
+<p><strong>查看目录</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ls</span><br></pre></td></tr></table></figure>
+<p>##文件操作</p>
+<p><strong>创建文件</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">touch ~/testfile</span><br></pre></td></tr></table></figure>
+<p><strong>删除文件</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rm ~/testfile</span><br></pre></td></tr></table></figure>
+<p><strong>复制文件</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cp ~/testfile ~/testnewfile</span><br></pre></td></tr></table></figure>
+<p><strong>查看文件内容</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat ~/.bash_history</span><br></pre></td></tr></table></figure>
+<p>##过滤、管道与重定向<br><strong>过滤文件内内容</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep &#x27;root&#x27; /etc/pwd</span><br></pre></td></tr></table></figure>
+<p><strong>过滤文件夹内内容</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep -r &#x27;linux&#x27; /var/log</span><br></pre></td></tr></table></figure>
+<p><strong>管道</strong><br>管道的作用是将上一个命令的输出和下一个命令的输入连接起来</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat ~/.bash_history | grep &#x27;ls&#x27; </span><br></pre></td></tr></table></figure>
+<p><strong>重定向</strong><br>使用&gt;或者&lt;将内容重定向文件中 </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo &#x27;hello,world!&#x27;&gt; ~/test.txt</span><br></pre></td></tr></table></figure>
+
+<h3 id="运维常用命令"><a href="#运维常用命令" class="headerlink" title="运维常用命令"></a>运维常用命令</h3><p><strong>ping</strong><br>四个ping包</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ping -c 4 www.baidu.com</span><br></pre></td></tr></table></figure>
+<p><strong>网络状态</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">netstat -lt</span><br><span class="line">netstat -tulpn</span><br></pre></td></tr></table></figure>
+<p><strong>过滤得到当前系统ssh信息</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps -aux | grep &#x27;ssh&#x27;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">----------</span><br><span class="line"></span><br><span class="line">anaconda切换环境</span><br><span class="line">conda info -e</span><br><span class="line">activate python2</span><br><span class="line"></span><br><span class="line">----------</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="Linux离线安装apt包"><a href="#Linux离线安装apt包" class="headerlink" title="Linux离线安装apt包"></a>Linux离线安装apt包</h3><p>首先需要了解的是在网络正常情况下使用apt -d install 安装，会把包下载在*&#x2F;var&#x2F;cache&#x2F;apt&#x2F;archives&#x2F;*下。</p>
+<p>因此整体思路就是在正常的安装，把下载的包和依赖包拷贝到离线机器上，构建包索引，执行安装</p>
+<p>如果正常机器上已经安装需要的包了，那么使用aptitude工具卸载安装的包</p>
+<p>（0）aptitude可以卸载包及依赖的包</p>
+<p><code>sudo aptitude remove</code></p>
+<p>（1）清理apt的下载缓存区。</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo rm -rf /var/cache/apt/archives/*</span><br></pre></td></tr></table></figure>
+
+<p>（2）下载所需要的组件</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get -d install <span class="tag">&lt;<span class="name">包名</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>（3）创建一个目录，将下载的包拷贝到该目录下</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cp -r /var/cache/apt/archives  /yout-path</span><br></pre></td></tr></table></figure>
+
+<p>（4）修改目录权限</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod 777 -R /your-path</span><br></pre></td></tr></table></figure>
+
+<p>（5） 建立deb包的依赖关系</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">sudo touch /your-path/Packages.gz</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">sudo dpkg-scanpackages /your-path/ /dev/null  | gzip &gt; /your-path/Packages.gz</span><br></pre></td></tr></table></figure>
+
+<p>（6）将所有下载的文件和生成的gz文件拷贝到离线的ubuntu机器上，将 &#x2F;etc&#x2F;apt&#x2F;sources.list原有内容注释掉，新增：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">deb file:/var debs/</span><br></pre></td></tr></table></figure>
+
+<p>（7）执行 sudo apt-get update，之后就可以直接使用apt-get install 包名 来安装了</p>
+<h3 id="sudo-E"><a href="#sudo-E" class="headerlink" title="sudo -E"></a>sudo -E</h3><p>简单来说，就是加上<code>-E</code>选项后，用户可以在sudo执行时保留当前用户已存在的环境变量，不会被sudo重置，另外，如果用户对于指定的环境变量没有权限，则会报错。</p>
+<h3 id="文件大小"><a href="#文件大小" class="headerlink" title="文件大小"></a>文件大小</h3><p><code>df -h</code>查看系统中文件的使用情况</p>
+<p><code>du -sh *</code>查看当前目录下各个文件及目录占用空间大小</p>
+<p>可以排序查看 <code>du -sh \root\* | sort -nr</code></p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>Ian Tang</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://tkhfree.github.io/2022/11/27/Shell%E4%BD%BF%E7%94%A8%E4%BB%8B%E7%BB%8D-2022-11-27/">https://tkhfree.github.io/2022/11/27/Shell%E4%BD%BF%E7%94%A8%E4%BB%8B%E7%BB%8D-2022-11-27/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/shell/"># shell</a>
+                    
+                        <a href="/tags/linux/"># linux</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2022/11/27/mariadb%E6%95%B0%E6%8D%AE%E5%BA%93%E9%87%8Cmysql.sock%E7%9A%84%E4%BD%9C%E7%94%A8-2022-11-27/">mariadb数据库里mysql.sock的作用</a>
+            
+            
+            <a class="next" rel="next" href="/2022/11/27/openstack%E7%9A%84keystone%E6%A8%A1%E5%9D%97-2022-11-27/">openstack的keystone模块介绍</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Ian Tang | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>

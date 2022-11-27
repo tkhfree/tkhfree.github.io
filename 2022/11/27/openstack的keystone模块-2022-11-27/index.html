@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Ian Tang">
+
+
+    <meta name="subtitle" content="岁月不居时节如流">
+
+
+    <meta name="description" content="好记性不如烂笔头">
+
+
+
+<title>openstack的keystone模块介绍 | 随笔</title>
+
+
+
+    <link rel="icon" href="/image/The_Lion_King_32_32.png">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Tangkaifei&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Tangkaifei&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    var tocbot_timer;
+    var DEPTH_MAX = 6; // 为 6 时展开所有
+    var tocbot_default_config = {
+        tocSelector: '.tocbot-list',
+        contentSelector: '.post-content',
+        headingSelector: 'h1, h2, h3, h4, h5',
+        orderedList: false,
+        scrollSmooth: true,
+        onClick: extend_click,
+    };
+
+    function extend_click() {
+        clearTimeout(tocbot_timer);
+        tocbot_timer = setTimeout(function() {
+            tocbot.refresh(obj_merge(tocbot_default_config, {
+                hasInnerContainers: true
+            }));
+        }, 420); // 这个值是由 tocbot 源码里定义的 scrollSmoothDuration 得来的
+    }
+
+    document.ready(function() {
+        tocbot.init(obj_merge(tocbot_default_config, {
+            collapseDepth: 1
+        }));
+    });
+
+    function expand_toc() {
+        var b = document.querySelector('.tocbot-toc-expand');
+        var expanded = b.getAttribute('data-expanded');
+        expanded ? b.removeAttribute('data-expanded') : b.setAttribute('data-expanded', true);
+        tocbot.refresh(obj_merge(tocbot_default_config, {
+            collapseDepth: expanded ? 1 : DEPTH_MAX
+        }));
+        b.innerText = expanded ? 'Expand all' : 'Collapse all';
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function obj_merge(target, source) {
+        for (var item in source) {
+            if (source.hasOwnProperty(item)) {
+                target[item] = source[item];
+            }
+        }
+        return target;
+    }
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">openstack的keystone模块介绍</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">Ian Tang</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">十一月 27, 2022&nbsp;&nbsp;12:06:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E5%BA%94%E7%94%A8%EF%BC%9A%E5%BA%94%E7%94%A8%E7%AC%94%E8%AE%B0/">应用：应用笔记</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p><a target="_blank" rel="noopener" href="https://yq.aliyun.com/articles/494442">openstack概述</a><br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/CloudMan6/p/6391603.html">openstack方法论</a><br><a target="_blank" rel="noopener" href="http://www.aboutyun.com/thread-10138-1-1.html">Openstack之keystone源代码分析2–Controller-&gt;Manager-&gt;Driver</a><br><a target="_blank" rel="noopener" href="http://www.aboutyun.com/thread-10137-1-1.html">Openstack之keystone源代码分析1–WSGI接口流程分析</a><br><a target="_blank" rel="noopener" href="http://www.aboutyun.com/thread-10136-1-1.html">[openstack][G版]keystone源码记录</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/u010325058/article/details/34845443">Openstack Keystone程序结构</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/zhxym/article/details/77374142">OpenStack中keystone组件源码流程</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/Jmilk/article/details/52067927">Keystone controller.py&amp;routers.py代码解析</a></p>
+<h2 id="keystone"><a href="#keystone" class="headerlink" title="keystone"></a>keystone</h2><p>User：使用Openstack组件的客户端可以是人、服务、系统，任何的客户端来访问openstack组件，都需要有一个用户名。</p>
+<p>Credentials：是用于确认用户身份的凭证，说白了就是‘信物’，具体可以是:</p>
+<p>用户名和密码<br>用户名和API key<br>一个 Keystone 分配的身份token<br>Authentication：</p>
+<p>是验证用户身份的过程。Keystone 服务通过检查用户的 Credential 来确定用户的身份。<br>最开始，使用用户名&#x2F;密码或者用户名&#x2F;API key作为credential。当用户的credential被验证后，Kestone 会给用户分配一个 authentication token 供该用户后续的请求使用。<br>Keystone中通过Policy（访问规则）来做到基于用户角色(Role)的访问控制。<br>Token：</p>
+<p>是一个数字字符串，访问资源时需要”亮出”你的令牌。在keystone中主要是引入令牌机制来保护用户对于资源的访问，同时引入PKI（公钥基础实施）对令牌加以保护。<br>Token包含了在指定范围和有效时间内可以被访问的资源。EG. 在Nova中一个tenant可以是一些虚拟机，在Swift和Glance中一个tenant可以是一些镜像存储，在Network中一个tenant可以是一些网络资源。<br>Role：</p>
+<p>本质就是一堆ACL的集合，用于划分权限<br>可以通过给User指定Role，使User获得Role对应的操作权限。<br>Keystone返回给User的Token包含了Role列表，被访问的Services会判断访问它的User和User提供的Token中所包含的Role,及每个role访问资源或者进行操作的权限。<br>系统默认使用管理Role admin和成员Role user（过去的普通用户角色是：_member_） 。<br>user验证时必须带有Project(Tenant)<br>Policy：</p>
+<p>对于Keystone service来说，Policy就是一个JSON文件，默认是&#x2F;etc&#x2F;keystone&#x2F;policy.json。通过配置这个文件，Keystone实现了对User基于Role的权限管理。<br>OpenStack对User的验证除了OpenStack的身份验证以外，还需要鉴别User对某个Service是否有访问权限。Policy机制就是用来控制User对Project(Tenant)中资源的操作权限。<br>Project(Tenant)：</p>
+<p>是一个人、或服务所拥有的资源集合。不同的Project之间资源是隔离的，资源可以设置配额。<br>在一个Project(Tenant)中可以包含多个User，每一个User都会根据权限的划分来使用Project(Tenant)中的资源。比如通过Nova创建虚拟机时要指定到某个Project中，在Cinder创建卷也要指定到某个Project中。<br>User访问Project的资源前，必须要与该Project关联，并且指定User在Project下的Role，一个assignment（关联）即：Project-User-Role<br>Service：即Openstack中运行的各个组件服务。</p>
+<p>Endpoint：</p>
+<p>是一个可以通过网络来访问和定位某个Openstack service的地址，通常是一个URL<br>不同的region有不同的endpoint（我们可以通过endpoint的region属性去定义多个region）。<br>当Nova需要访问Glance服务去获取image 时，Nova通过访问Keystone拿到Glance的endpoint，然后通过访问该endpoint去获取Glance服务。<br>Endpoint 分为三类：<br>admin url –&gt; 给admin用户使用，Port：35357<br>internal url –&gt; OpenStack内部服务使用来跟别的服务通信，Port：5000<br>public url –&gt; 互联网用户可以访问的地址，Port：5000<br>Catalog：<br>用户和服务可以使用使用keystone管理的catalog，定位到其他的服务，catalog一个openstack部署的相关服务的集合，每个服务都有一个或者多个endpoint（即可以访问的url地址），即catalog&#x3D;services+endpoint。每个endpoint可以分为三种类型：</p>
+<p>admin，internal，public，在生产环境中，不同endpoint类型位于不同的网络来为不同的用户使用（提高安全性），比如:</p>
+<p>public API:对整个互联网可见，这样客户就可以方便的管理自己的云了。</p>
+<p>admin API:应该严格限定只有管理云基础设施的组织内的运营商，才能使用该API</p>
+<p>internel API:应该被限定只有那些安装有OpenStack服务的主机，才能使用该API</p>
+<p>Service与Endpoint关系介绍：</p>
+<p>在openstack中，每一个service都有三种endpoint. Admin, public, internal（创建完service后需要为其创建API EndPoint. ）<br>Admin是用作管理用途的，如它能够修改user&#x2F;tenant(project)。<br>public 是让客户调用的，比如可以部署在外网上让客户可以管理自己的云。<br>internal是openstack内部调用的。<br>三种endpoints 在网络上开放的权限一般也不同。Admin通常只能对内网开放，public通常可以对外网开放，internal通常只能对安装有openstack对服务的机器开放。<br> endpoint举例<br>Regions：</p>
+<p>openstack支持多个可扩展的regions，OpenStack的支持可扩展的多个区域。为简单起见，一般使用管理网络ip地址作为所有endpoint类型(三种api)的ip，且所有的endpoint类型(三种api)都使用一个区域，即regionone区。</p>
+<p>每个你部署的openstack服务都需要绑定endpoint（存储在keystone中）来提供服一个服务的入口，因而我们第一需要部署的组件就是keystone。</p>
+<p>V3新增的概念：</p>
+<p>Tenant 重命名为 Project<br>添加了 Domain 的概念<br>添加了 Group 的概念</p>
+<p>openstack资料：<br> <a target="_blank" rel="noopener" href="https://www.cnblogs.com/jmilkfan-fanguiju/p/11825035.html">数据包从物理网卡流经 Open vSwitch 进入 OpenStack 云主机的流程</a></p>
+<hr>
+<p>用户alice登录keystone系统（password或者token的方式），获取一个临时的token和catalog服务目录（v3版本登录时，如果没有指定scope，project或者domain，获取的临时token没有任何权限，不能查询project或者catalog）。</p>
+<p>alice通过临时token获取自己的所有的project列表。</p>
+<p>alice选定一个project，然后指定project重新登录，获取一个正式的token，同时获得服务列表的endpoint，用户选定一个endpoint，在HTTP消息头中携带token，然后发送请求（如果用户知道project name或者project id可以直接第3步登录）。</p>
+<p>消息到达endpoint之后，由服务端（nova）的keystone中间件（pipeline中的filter：authtoken）向keystone发送一个验证token的请求。（token类型：uuid需要在keystone验证token，pki类型的token本身是包含用户详细信息的加密串，可以在服务端完成验证）</p>
+<p>keystone验证token成功之后，将token对应用户的详细信息，例如：role，username，userid等，返回给服务端（nova）。</p>
+<p>服务端（nova）完成请求，例如：创建虚拟机。</p>
+<p>服务端返回请求结果给alice。</p>
+<p>keystone<br>User：使用Openstack组件的客户端可以是人、服务、系统，任何的客户端来访问openstack组件，都需要有一个用户<br>名。<br>Credentials：是用于确认用户身份的凭证，说白了就是‘信物’，具体可以是:<br>用户名和密码<br>用户名和API key<br>一个 Keystone 分配的身份token<br>Authentication：<br>是验证用户身份的过程。Keystone 服务通过检查用户的 Credential 来确定用户的身份。<br>最开始，使用用户名&#x2F;密码或者用户名&#x2F;API key作为credential。当用户的credential被验证后，Kestone 会给用户分配<br>一个 authentication token 供该用户后续的请求使用。<br>Keystone中通过Policy（访问规则）来做到基于用户角色(Role)的访问控制。<br>Token：<br>是一个数字字符串，访问资源时需要”亮出”你的令牌。在keystone中主要是引入令牌机制来保护用户对于资源的访问，同<br>时引入PKI（公钥基础实施）对令牌加以保护。<br>Token包含了在指定范围和有效时间内可以被访问的资源。EG. 在Nova中一个tenant可以是一些虚拟机，在Swift和<br>Glance中一个tenant可以是一些镜像存储，在Network中一个tenant可以是一些网络资源。<br>Role：<br>本质就是一堆ACL的集合，用于划分权限<br>可以通过给User指定Role，使User获得Role对应的操作权限。<br>Keystone返回给User的Token包含了Role列表，被访问的Services会判断访问它的User和User提供的Token中所包含的<br>Role,及每个role访问资源或者进行操作的权限。<br>系统默认使用管理Role admin和成员Role user（过去的普通用户角色是：member） 。<br>user验证时必须带有Project(Tenant)<br>Policy：<br>对于Keystone service来说，Policy就是一个JSON文件，默认是&#x2F;etc&#x2F;keystone&#x2F;policy.json。通过配置这个文件，<br>Keystone实现了对User基于Role的权限管理。<br>OpenStack对User的验证除了OpenStack的身份验证以外，还需要鉴别User对某个Service是否有访问权限。Policy机制<br>就是用来控制User对Project(Tenant)中资源的操作权限。<br>Project(Tenant)：<br>是一个人、或服务所拥有的资源集合。不同的Project之间资源是隔离的，资源可以设置配额。<br>在一个Project(Tenant)中可以包含多个User，每一个User都会根据权限的划分来使用Project(Tenant)中的资源。比如通<br>过Nova创建虚拟机时要指定到某个Project中，在Cinder创建卷也要指定到某个Project中。<br>User访问Project的资源前，必须要与该Project关联，并且指定User在Project下的Role，一个assignment（关联）即：<br>Project-User-Role<br>Service：即Openstack中运行的各个组件服务。<br>Endpoint：<br>是一个可以通过网络来访问和定位某个Openstack service的地址，通常是一个URL<br>不同的region有不同的endpoint（我们可以通过endpoint的region属性去定义多个region）。<br>当Nova需要访问Glance服务去获取image 时，Nova通过访问Keystone拿到Glance的endpoint，然后通过访问该<br>endpoint去获取Glance服务。<br>Endpoint 分为三类：</p>
+<p>admin url –&gt; 给admin用户使用，Port：35357<br>internal url –&gt; OpenStack内部服务使用来跟别的服务通信，Port：5000<br>public url –&gt; 互联网用户可以访问的地址，Port：5000<br>Catalog：<br>用户和服务可以使用使用keystone管理的catalog，定位到其他的服务，catalog一个openstack部署的相关服务的集<br>合，每个服务都有一个或者多个endpoint（即可以访问的url地址），即catalog&#x3D;services+endpoint。每个endpoint<br>可以分为三种类型：<br>admin，internal，public，在生产环境中，不同endpoint类型位于不同的网络来为不同的用户使用（提高安全性），比<br>如:<br>public API:对整个互联网可见，这样客户就可以方便的管理自己的云了。<br>admin API:应该严格限定只有管理云基础设施的组织内的运营商，才能使用该API<br>internel API:应该被限定只有那些安装有OpenStack服务的主机，才能使用该API<br>Service与Endpoint关系介绍：<br>在openstack中，每一个service都有三种endpoint. Admin, public, internal（创建完service后需要为其创建API<br>EndPoint. ）<br>Admin是用作管理用途的，如它能够修改user&#x2F;tenant(project)。<br>public 是让客户调用的，比如可以部署在外网上让客户可以管理自己的云。<br>internal是openstack内部调用的。<br>三种endpoints 在网络上开放的权限一般也不同。Admin通常只能对内网开放，public通常可以对外网开放，internal通<br>常只能对安装有openstack对服务的机器开放。<br>endpoint举例<br>Regions：<br>openstack支持多个可扩展的regions，OpenStack的支持可扩展的多个区域。为简单起见，一般使用管理网络ip地址作<br>为所有endpoint类型(三种api)的ip，且所有的endpoint类型(三种api)都使用一个区域，即regionone区。<br>每个你部署的openstack服务都需要绑定endpoint（存储在keystone中）来提供服一个服务的入口，因而我们第一需要<br>部署的组件就是keystone。<br>V3新增的概念：<br>Tenant 重命名为 Project<br>添加了 Domain 的概念<br>添加了 Group 的概念</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>Ian Tang</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://tkhfree.github.io/2022/11/27/openstack%E7%9A%84keystone%E6%A8%A1%E5%9D%97-2022-11-27/">https://tkhfree.github.io/2022/11/27/openstack%E7%9A%84keystone%E6%A8%A1%E5%9D%97-2022-11-27/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/openstack/"># openstack</a>
+                    
+                        <a href="/tags/python/"># python</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2022/11/27/Shell%E4%BD%BF%E7%94%A8%E4%BB%8B%E7%BB%8D-2022-11-27/">Shell使用介绍</a>
+            
+            
+            <a class="next" rel="next" href="/2022/11/27/Git%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93-2022-11-27/">Git使用总结</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Ian Tang | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>

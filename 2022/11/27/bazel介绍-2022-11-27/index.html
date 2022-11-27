@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Ian Tang">
+
+
+    <meta name="subtitle" content="岁月不居时节如流">
+
+
+    <meta name="description" content="好记性不如烂笔头">
+
+
+
+<title>bazel介绍 | 随笔</title>
+
+
+
+    <link rel="icon" href="/image/The_Lion_King_32_32.png">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Tangkaifei&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Tangkaifei&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    var tocbot_timer;
+    var DEPTH_MAX = 6; // 为 6 时展开所有
+    var tocbot_default_config = {
+        tocSelector: '.tocbot-list',
+        contentSelector: '.post-content',
+        headingSelector: 'h1, h2, h3, h4, h5',
+        orderedList: false,
+        scrollSmooth: true,
+        onClick: extend_click,
+    };
+
+    function extend_click() {
+        clearTimeout(tocbot_timer);
+        tocbot_timer = setTimeout(function() {
+            tocbot.refresh(obj_merge(tocbot_default_config, {
+                hasInnerContainers: true
+            }));
+        }, 420); // 这个值是由 tocbot 源码里定义的 scrollSmoothDuration 得来的
+    }
+
+    document.ready(function() {
+        tocbot.init(obj_merge(tocbot_default_config, {
+            collapseDepth: 1
+        }));
+    });
+
+    function expand_toc() {
+        var b = document.querySelector('.tocbot-toc-expand');
+        var expanded = b.getAttribute('data-expanded');
+        expanded ? b.removeAttribute('data-expanded') : b.setAttribute('data-expanded', true);
+        tocbot.refresh(obj_merge(tocbot_default_config, {
+            collapseDepth: expanded ? 1 : DEPTH_MAX
+        }));
+        b.innerText = expanded ? 'Expand all' : 'Collapse all';
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function obj_merge(target, source) {
+        for (var item in source) {
+            if (source.hasOwnProperty(item)) {
+                target[item] = source[item];
+            }
+        }
+        return target;
+    }
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">bazel介绍</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">Ian Tang</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">十一月 27, 2022&nbsp;&nbsp;12:04:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E5%BA%94%E7%94%A8%EF%BC%9A%E5%BA%94%E7%94%A8%E7%AC%94%E8%AE%B0/">应用：应用笔记</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h2 id="bazel是用来干啥的"><a href="#bazel是用来干啥的" class="headerlink" title="bazel是用来干啥的"></a>bazel是用来干啥的</h2><p>bazel是一个项目的构建工具，像make、maven等，通过编写配置文件等，一键构建整个工程项目目录。</p>
+<p>为什么需要构建工具？</p>
+<p>我们普通编程的时候，代码量很小，我们可以使用简单的命令行javac、gcc或者在IDE里一键运行，这些编译器可以自动寻找目录下的文件，进行组合，编译成二进制可执行文件。但是如果一些共享库并不在当前目录下，或者需要多种编程语言混合编程的话，并没有一种编译器可以直接编译这种项目。当我们处理多个编程语言或者多个模块时，编程就不是一蹴而就的。我们需要思考代码之间的依赖关系，调整他们在编译器中的位置，如果一旦修改一部分代码，那么依赖他的二进制执行代码都会失效，需要重复整个过程。我们将一些依赖的库，放在诸如lib的文件夹下，时间长了我们很难记住哪些库的作用是什么。</p>
+<p>可以用脚本执行构建顺序么？</p>
+<p>像t4p4s这种项目，就是使用脚本调整编译器的参数进行构建。但是随着每次更改代码，都需要思考脚本的执行，有一些不需要重复构建的工作通过脚本进行判断也比较困难。</p>
+<h2 id="bazel的文件管理架构"><a href="#bazel的文件管理架构" class="headerlink" title="bazel的文件管理架构"></a>bazel的文件管理架构</h2><p>bazel的文件架构有两个：workspace和package</p>
+<p>workspace是表示整个项目，也叫repo，项目的根目录下创建WORKSPACE文件定义项目根目录，忽略项目子目录下的WORKSPACE文件</p>
+<p>package是项目中的模块，也就是一个个包，包比较随意，可以根据项目需求来定，你想让哪个文件夹下东西成为一个包，就在文件夹目录创建一个BUILD文件，包的管理包括子目录里的东西，不包括子包所包括的内容</p>
+<p>一个包路径写全：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">@[project_name]<span class="comment">//[path/to/package]</span></span><br></pre></td></tr></table></figure>
+
+<p>例如</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">.../project/</span><br><span class="line">	WORKSPACE</span><br><span class="line">	lib/</span><br><span class="line">		BUILD</span><br><span class="line">		...</span><br><span class="line">	src/</span><br><span class="line">		BUILD</span><br><span class="line">		...</span><br><span class="line">		other1/</span><br><span class="line">			BUILD</span><br><span class="line">		other2/</span><br><span class="line">			...</span><br></pre></td></tr></table></figure>
+
+<p>lib、src、other1都是包，写全路径<code>@project//src/other1</code></p>
+<ul>
+<li>workspace 工作空间，每个工作空间中由一个<code>WORKSPACE</code>文件，来描述工作空间所使用到的信息。</li>
+<li>package 程序包，每个程序包中包含一个<code>BUILD</code>文件，此文件中描述了此工具包的生成构建方式。</li>
+<li>target 目标，生成的目标，每个target又可以作为另外一个规则的输入。<br>绝大部分的target属于两种基本类型中的一种，<code>file</code>和<code>rule</code>。另外，还有一种其他的target类型，package group。但是他们很少见。</li>
+</ul>
+<p><img src="https://pic.downk.cc/item/5fe9b8913ffa7d37b301beb6.jpg"></p>
+<h2 id="bazel的运行架构"><a href="#bazel的运行架构" class="headerlink" title="bazel的运行架构"></a>bazel的运行架构</h2><p>bazel自动化构建代码分为三个步骤：</p>
+<ul>
+<li>加载阶段：load phase</li>
+<li>分析阶段：analysis phase</li>
+<li>执行阶段：execution phase</li>
+</ul>
+<p>加载阶段是执行BUILD，load等命令类似于c中的预编译，将头文件#includ等拷贝进文件内，和一些宏定义替换。这个阶段就是替换代码，展开代码之类的事。</p>
+<p>分析阶段是获得一个完整的BUILD文件，里面是一个个函数调用。在BUILD文件中我们用规则[rules]来描述构建后包的输出。使用包名和规则名称可以唯一的标示这条规则。我们把这两者的结合叫做标签[label]，我们使用标签来描述规则之间的依赖关系。分析阶段就是执行BUILD文件，生成一个依赖关系的无环有向图。</p>
+<p>执行阶段进行构建项目。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">java_binary(</span><br><span class="line">name = <span class="string">&quot;MyBinary&quot;</span>,</span><br><span class="line">srcs = [<span class="string">&quot;MyBinary.java&quot;</span>], deps = [</span><br><span class="line"><span class="string">&quot;:mylib&quot;</span>, ],</span><br><span class="line">)</span><br><span class="line">java_library(</span><br><span class="line">name = <span class="string">&quot;mylib&quot;</span>,</span><br><span class="line">srcs = [<span class="string">&quot;MyLibrary.java&quot;</span>, <span class="string">&quot;MyHelper.java&quot;</span>],</span><br><span class="line">visibility = [<span class="string">&quot;//java/com/example/myproduct:__subpackages__&quot;</span>],</span><br><span class="line">deps = [</span><br><span class="line"><span class="string">&quot;//java/com/example/common&quot;</span>, <span class="string">&quot;//java/com/example/myproduct/otherlib&quot;</span>, <span class="string">&quot;@com_google_common_guava_guava//jar&quot;</span>,</span><br><span class="line">], )</span><br></pre></td></tr></table></figure>
+
+<p>在Bazel中，BUILD文件定义了targets。上面的两个targets分别是java_binary和java_library. 每个target都对应着bazel能够创建的一种artifact. binary targets生成能够直接运行的二进制文件，library targets生成能够被其它binary或者library所使用的内容。每个target都有一个name（定义它在命令行和其它target中应该如何被引用)，srcs（定义必须被编译的相关源文件以生成对应的target制品），以及deps（定义前置必须先构建或链接的依赖）。依赖关系可以限制在当前package以内（e.g. MyBinary依赖于:mylib），也可以是在同一个源代码层级中的不同package(e.g. mylib依赖于&#x2F;&#x2F;java&#x2F;com&#x2F;example&#x2F;common)，或者源代码层级之外的第三方artifact(e.g. mylib依赖于”@com_google_common_grava_grava&#x2F;&#x2F;jar”). 每个源代码层级(source hierarchy)都被称为一个workspace，并由根目录下的一个WORKSPACE文件来标示。</p>
+<p>和Ant一样，用户也需要使用bazel的命令行工具来进行构建。为了构建MyBinary这个target，用户需要执行</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bazel build :MyBinary</span><br></pre></td></tr></table></figure>
+
+<p>在第一次运行上面命令时，Bazel会执行下列工作：</p>
+<ol>
+<li>解析当前workspace中每一个BUILD文件，创建各个制品(artifacts)之间的依赖图(graph of dependencies)</li>
+<li>使用上面创建的图来决定MyBinary的依赖转换关系(transitive dependencies)，也即是MyBinary所依赖的每个target，及每个target依赖的其它target，以此递归</li>
+<li>根据具体定义，按顺序构建或下载每一个依赖。Bazel在这里首先构建没有任何依赖的target，并保持跟踪对于每个target来说还有哪些依赖需要构建。一旦一个target的所有依赖都已经构建好之后，Bazel就开始构建该target. 该过程持续到MyBinary的每一个依赖都被构建完成。</li>
+<li>链接所有上一步中所生成的依赖，构建MyBinary来生成最后的可执行二进制文件。</li>
+</ol>
+<p>在第二次运行的时候，如果没什么修改，bazel1秒钟之内就会结束–bazel知道每个target都已经是最新的。</p>
+<h2 id="对工具的依赖"><a href="#对工具的依赖" class="headerlink" title="对工具的依赖"></a>对工具的依赖</h2><p>有时候很多构建都依赖于机器上的工具，由于工具版本和安装环境的因素，跨机器构建会有很多问题，如果是多语言编程，会更加困难。</p>
+<p>这里牵扯到两个方面：环境依赖和平台针对性</p>
+<p>bazel解决第一个问题是把工具作为target依赖的一部分在workspace里配置，bazel构建的时候首先检查工具是否指定版本和是否在指定位置，如果不在则下载。</p>
+<p>bazel解决第二个问题时使用工具链，工具链包括一组工具和其他相关属性，定义某个类型target如何在特定平台构建</p>
+<p>如何确定一个可靠的外部依赖呢？</p>
+<p>如果每次都要从外部第三方下在一些工具和库，如果第三方改变或者挂掉那就不能保证构建一致性。Bazel和其它构建系统通过workspace范围内的清单(manifest)来处理这个问题，这个清单列出了所有外部依赖的加密hash值(cryptographic hash)。</p>
+<h2 id="处理模块和依赖"><a href="#处理模块和依赖" class="headerlink" title="处理模块和依赖"></a>处理模块和依赖</h2><p><strong>最小化模块可见度</strong></p>
+<p>Bazel和其它构建系统允许每个target都定义自己的可见度(visibility):定义哪些targets可能会依赖自己。Targets可以是public的，这种情况下在workspace中的任何target都可以引用。可以是private，那么只有在同一个BUILD文件中的才能引用。或者也可以只对于一个列表中的targets可见。可见度(Visibility)和dependency是相反的：如果target A需要依赖于target B，那么target B必须是对A可见的。</p>
+<p><strong>内部依赖</strong></p>
+<p>在一个大项目拆分为细分模块后，大部分依赖项都很可能是项目内部的，意即为依赖于另一个在同一个代码仓库中定义和构建的target. 内部依赖和外部依赖的差别在于，他们是直接从源代码构建，而不是在构建过程中从外部作为一个预先构建好的artifact下载。这也意味着对内部构建而言，实际上没有版本的概念–一个target及其所有的内部依赖项都是始终从代码仓库的同一个版本统一构建的。</p>
+<p><strong>外部依赖</strong></p>
+<p>如果一个依赖不是内部的，那么它一定是来自外部。外部依赖指构建和存储在当前构建系统之外的artifacts制品。这样的依赖项被直接从artifact仓库导入(通常通过internet)，并会被直接使用，而不是从代码构建。它和内部依赖最大的一点差异是外部依赖存在版本，并且这些版本独立于项目的源代码存在。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>Ian Tang</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://tkhfree.github.io/2022/11/27/bazel%E4%BB%8B%E7%BB%8D-2022-11-27/">https://tkhfree.github.io/2022/11/27/bazel%E4%BB%8B%E7%BB%8D-2022-11-27/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/bazel/"># bazel</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2022/11/27/Git%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93-2022-11-27/">Git使用总结</a>
+            
+            
+            <a class="next" rel="next" href="/2022/11/27/%E4%BD%BF%E7%94%A8devstack%EF%BC%88pike%EF%BC%89%E9%83%A8%E7%BD%B2openstack-2022-11-27/">使用devstack（pike）部署openstack</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Ian Tang | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
